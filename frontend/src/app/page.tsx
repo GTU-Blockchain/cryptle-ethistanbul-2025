@@ -30,20 +30,13 @@ export default function Home() {
                                 </Button>
                             </Link>
                         ) : (
-                            <div className="flex flex-col sm:flex-row gap-4 items-center">
+                            <div className="flex flex-col items-center gap-4">
                                 <WalletSelector />
-                                <span className="text-slate-400">or</span>
-                                <Link href="/play">
-                                    <Button
-                                        variant="outline"
-                                        className="border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300"
-                                    >
-                                        Try Demo
-                                    </Button>
-                                </Link>
+                                <p className="text-slate-500 text-sm">
+                                    Connect your wallet to start playing
+                                </p>
                             </div>
                         )}
-
                     </div>
                 </div>
             </section>

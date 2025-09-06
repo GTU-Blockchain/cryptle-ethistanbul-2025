@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
+import { WalletSelector } from "../WalletSelector";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
 
@@ -13,6 +15,7 @@ interface Letter {
 const WORDS = ["CRANE"];
 
 export function Wordle() {
+    const { address, isConnected } = useAccount();
     const [guesses, setGuesses] = useState<Letter[][]>([]);
     const [currentGuess, setCurrentGuess] = useState<string>("");
     const [targetWord, setTargetWord] = useState<string>("");
@@ -21,6 +24,24 @@ export function Wordle() {
     const [letterStates, setLetterStates] = useState<
         Record<string, LetterState>
     >({});
+
+    // Check wallet connection first
+    if (!isConnected || !address) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-8">
+                <h1 className="text-4xl font-bold mb-8">CRYPTLE</h1>
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold mb-4 text-red-400">
+                        Wallet Required
+                    </h2>
+                    <p className="text-gray-400 mb-6">
+                        Please connect your wallet to play CRYPTLE
+                    </p>
+                    <WalletSelector />
+                </div>
+            </div>
+        );
+    }
 
     // Initialize game
     useEffect(() => {
