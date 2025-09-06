@@ -1,9 +1,10 @@
 "use client";
-
+import Link from "next/link";
 import { WalletSelector } from "@/components/WalletSelector";
 import { useAccount } from "wagmi";
 import { Wordle } from "@/components/wordle/Wordle";
 import { Button } from "@/components/ui/button";
+
 
 export default function Home() {
     const { address, isConnected } = useAccount();
@@ -23,25 +24,26 @@ export default function Home() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                         {isConnected && address ? (
-                            <Button
-                                onClick={() => window.location.href = '/play'}
-                                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-12 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
-                            >
-                                Start Playing
-                            </Button>
+                            <Link href="/play">
+                                <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-12 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                                    Start Playing
+                                </Button>
+                            </Link>
                         ) : (
                             <div className="flex flex-col sm:flex-row gap-4 items-center">
                                 <WalletSelector />
                                 <span className="text-slate-400">or</span>
-                                <Button
-                                    onClick={() => window.location.href = '/play'}
-                                    variant="outline"
-                                    className="border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300"
-                                >
-                                    Try Demo
-                                </Button>
+                                <Link href="/play">
+                                    <Button
+                                        variant="outline"
+                                        className="border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300"
+                                    >
+                                        Try Demo
+                                    </Button>
+                                </Link>
                             </div>
                         )}
+
                     </div>
                 </div>
             </section>
@@ -52,7 +54,7 @@ export default function Home() {
                     <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-cyan-400">
                         Game Preview
                     </h2>
-                    
+
                     <div className="flex justify-center">
                         <div className="bg-slate-900/80 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20 shadow-2xl">
                             <div className="grid grid-cols-5 gap-3 mb-4">
@@ -73,7 +75,7 @@ export default function Home() {
                                     L
                                 </div>
                             </div>
-                            
+
                             {/* Empty rows */}
                             <div className="grid grid-cols-5 gap-3 mb-4">
                                 {[...Array(5)].map((_, i) => (
@@ -102,7 +104,7 @@ export default function Home() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="text-center mt-12">
                         <p className="text-slate-400 text-lg mb-6">
                             Guess the 5-letter word in 6 tries. Each guess must be a valid word.
@@ -124,15 +126,6 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-
-            {/* Game Section - Show when connected */}
-            {isConnected && address && (
-                <section className="py-20 px-4">
-                    <div className="max-w-4xl mx-auto">
-                        <Wordle />
-                    </div>
-                </section>
-            )}
         </div>
     );
 }
