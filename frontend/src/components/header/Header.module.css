@@ -28,15 +28,13 @@
   }
 }
 
-/* Header Content */
 .headerContent {
+  position: relative;
   display: flex;
   align-items: center;
   height: 4rem;
   width: 100%;
-  gap: 1.5rem;
 }
-
 /* Logo Section */
 .logoSection {
   flex-shrink: 0;
@@ -81,10 +79,12 @@
 
 /* Desktop Navigation */
 .desktopNav {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: none;
-  gap: 0.5rem;
-  flex: 1;
-  justify-content: center;
+  gap: 2rem;
 }
 
 @media (min-width: 768px) {

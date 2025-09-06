@@ -45,7 +45,7 @@ export default function Header() {
                 </svg>
               </div>
               <span className={styles.logoText}>
-                SEEKify
+                Siikify
               </span>
             </Link>
           </div>
@@ -55,6 +55,10 @@ export default function Header() {
             <Link 
               href="/" 
               className={styles.navLink}
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             >
               Home
             </Link>
@@ -70,12 +74,18 @@ export default function Header() {
             >
               Leaderboard
             </Link>
-            <Link 
-              href="/how-it-works" 
+            <a 
+              href="#how-it-works" 
               className={styles.navLink}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('how-it-works')?.scrollIntoView({ 
+                  behavior: 'smooth' 
+                });
+              }}
             >
               How It Works
-            </Link>
+            </a>
           </nav>
 
           {/* Desktop CTA Buttons */}
@@ -117,7 +127,11 @@ export default function Header() {
                 <Link 
                   href="/" 
                   className={styles.mobileNavLink}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                 >
                   Home
                 </Link>
@@ -135,13 +149,19 @@ export default function Header() {
                 >
                   Leaderboard
                 </Link>
-                <Link 
-                  href="/how-it-works" 
+                <a 
+                  href="#how-it-works" 
                   className={styles.mobileNavLink}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMenuOpen(false);
+                    document.getElementById('how-it-works')?.scrollIntoView({ 
+                      behavior: 'smooth' 
+                    });
+                  }}
                 >
                   How It Works
-                </Link>
+                </a>
               </div>
               <div className={styles.mobileCta}>
                 <button 
