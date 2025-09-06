@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.yarn/
+
+# Testing
+coverage/
+
+# Production
+build/
+dist/
+out/
+.next/
+
+# Foundry
+contracts/cache/
+contracts/out/
+
+# Environment
+.env
+.env.local
+
+# Misc
+.DS_Store
+*.pem
+*.log
+
+# IDE
+.vscode/
+.idea/
