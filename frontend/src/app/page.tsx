@@ -2,6 +2,7 @@
 
 import { WalletSelector } from "@/components/WalletSelector";
 import { useAccount } from "wagmi";
+import { Wordle } from "@/components/wordle/Wordle";
 
 export default function Home() {
     const { address, isConnected } = useAccount();
@@ -9,7 +10,7 @@ export default function Home() {
     return (
         <div className="container mx-auto px-4 py-8">
             {isConnected && address ? (
-                <div></div>
+                <Wordle />
             ) : (
                 <div className="max-w-md mx-auto text-center">
                     <div className="rise-card">
