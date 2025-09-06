@@ -108,7 +108,7 @@ export function Wordle() {
             case "present":
                 return "bg-yellow-500";
             case "absent":
-                return "bg-gray-600";
+                return "bg-gray-700";
             default:
                 return "bg-gray-800";
         }
