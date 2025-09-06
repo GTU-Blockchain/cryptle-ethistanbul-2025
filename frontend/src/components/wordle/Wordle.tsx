@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
 import { WalletSelector } from "../WalletSelector";
+import { isValidWord, getRandomTargetWord } from "@/lib/words";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
 
@@ -11,8 +12,6 @@ interface Letter {
     letter: string;
     state: LetterState;
 }
-
-const WORDS = ["CRANE"];
 
 export function Wordle() {
     const { address, isConnected } = useAccount();
@@ -24,6 +23,7 @@ export function Wordle() {
     const [letterStates, setLetterStates] = useState<
         Record<string, LetterState>
     >({});
+    const [errorMessage, setErrorMessage] = useState<string>("");
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -45,7 +45,7 @@ export function Wordle() {
 
     // Initialize game
     useEffect(() => {
-        const randomWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+        const randomWord = getRandomTargetWord();
         setTargetWord(randomWord);
         console.log("Target word:", randomWord); // For debugging
     }, []);
@@ -85,6 +85,16 @@ export function Wordle() {
 
     const submitGuess = () => {
         if (currentGuess.length !== 5 || guesses.length >= 6) return;
+
+        // Check if the word is valid
+        if (!isValidWord(currentGuess)) {
+            setErrorMessage("Not a valid word!");
+            setTimeout(() => setErrorMessage(""), 2000); // Clear error after 2 seconds
+            return;
+        }
+
+        // Clear any previous error
+        setErrorMessage("");
 
         const newGuess: Letter[] = currentGuess
             .split("")
@@ -198,6 +208,13 @@ export function Wordle() {
         <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-8">
             <h1 className="text-4xl font-bold mb-8">CRYPTLE</h1>
 
+            {/* Error message */}
+            {errorMessage && (
+                <div className="mb-4 px-4 py-2 bg-red-600 text-white rounded-lg text-center font-semibold">
+                    {errorMessage}
+                </div>
+            )}
+
             <div className="mb-8">{renderGrid()}</div>
 
             {gameOver && (
@@ -226,6 +243,7 @@ export function Wordle() {
 
             <div className="text-sm text-gray-400 mt-4">
                 <p>Type your guess and press Enter</p>
+                <p>Only valid 5-letter English words are accepted</p>
                 <p>
                     Green = correct position, Yellow = wrong position, Gray =
                     not in word
