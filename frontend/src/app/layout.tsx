@@ -7,7 +7,7 @@ import { Providers } from "@/components/Providers";
 // Removed NetworkStatus import - debug panel not needed on main page
 import { AutoWalletProvider } from "@/components/AutoWalletProvider";
 import { WebSocketStatus } from "@/components/WebSocketStatus";
-import { NavigationBar } from "@/components/NavigationBar";
+import Header from "@/components/header/Header";
 
 // Custom fonts
 const fkDisplay = localFont({
@@ -23,6 +23,7 @@ const fkGrotesk = localFont({
       path: "../fonts/FKGrotesk-Regular.woff",
       weight: "400",
       style: "normal",
+      
     },
     {
       path: "../fonts/FKGrotesk-Bold.woff",
@@ -83,7 +84,7 @@ export default function RootLayout({
           <ThemeProvider>
             <AutoWalletProvider>
               <div className="min-h-screen flex flex-col">
-                <NavigationBar />
+                <Header/>
                 <main className="flex-1">
                   {children}
                 </main>
