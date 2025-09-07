@@ -53,6 +53,29 @@ export function useWordleContract() {
         return Number(maxGuesses);
     }, [read]);
 
+    // Match read functions
+    const getMatch = useCallback(
+        async (matchId: number): Promise<any> => {
+            return await read("getMatch", [matchId]);
+        },
+        [read]
+    );
+
+    const getMatchTimeLeft = useCallback(
+        async (matchId: number): Promise<number> => {
+            const timeLeft = (await read("getMatchTimeLeft", [
+                matchId,
+            ])) as bigint;
+            return Number(timeLeft);
+        },
+        [read]
+    );
+
+    const getNextMatchId = useCallback(async (): Promise<number> => {
+        const nextId = (await read("nextMatchId")) as bigint;
+        return Number(nextId);
+    }, [read]);
+
     // Write functions with proper typing
     const createGame = useCallback(
         async (durationSeconds: number = 60) => {
@@ -111,6 +134,39 @@ export function useWordleContract() {
         [write]
     );
 
+    // Match write functions
+    const createMatch = useCallback(
+        async (durationSeconds: number = 300, stakeAmount: string) => {
+            return await write("createMatch", [durationSeconds], {
+                value: stakeAmount,
+            });
+        },
+        [write]
+    );
+
+    const joinMatch = useCallback(
+        async (matchId: number, stakeAmount: string) => {
+            return await write("joinMatch", [matchId], {
+                value: stakeAmount,
+            });
+        },
+        [write]
+    );
+
+    const seedMatchWord = useCallback(
+        async (matchId: number, wordHash: string) => {
+            return await write("seedMatchWord", [matchId, wordHash]);
+        },
+        [write]
+    );
+
+    const submitMatchGuess = useCallback(
+        async (matchId: number, guess: string) => {
+            return await write("submitMatchGuess", [matchId, guess]);
+        },
+        [write]
+    );
+
     // Admin functions (only owner)
     const setOracle = useCallback(
         async (oracleAddress: string) => {
@@ -132,6 +188,11 @@ export function useWordleContract() {
         getWordLength,
         getMaxGuesses,
 
+        // Match read functions
+        getMatch,
+        getMatchTimeLeft,
+        getNextMatchId,
+
         // Write functions
         createGame,
         seedWordHash,
@@ -139,6 +200,12 @@ export function useWordleContract() {
         createGameForPlayer,
         createGameWithWord,
         batchCreateGames,
+
+        // Match write functions
+        createMatch,
+        joinMatch,
+        seedMatchWord,
+        submitMatchGuess,
 
         // Admin functions
         setOracle,

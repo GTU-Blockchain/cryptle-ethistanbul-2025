@@ -40,6 +40,27 @@ export function useWordleEvents() {
         "OracleUpdated"
     );
 
+    // Get all Match events
+    const matchCreatedEvents = useContractEventSubscription(
+        "SimpleWordle",
+        "MatchCreated"
+    );
+
+    const matchJoinedEvents = useContractEventSubscription(
+        "SimpleWordle",
+        "MatchJoined"
+    );
+
+    const matchGuessSubmittedEvents = useContractEventSubscription(
+        "SimpleWordle",
+        "MatchGuessSubmitted"
+    );
+
+    const matchResolvedEvents = useContractEventSubscription(
+        "SimpleWordle",
+        "MatchResolved"
+    );
+
     // Process game created events into a more usable format
     const gamesCreated = useMemo(() => {
         return gameCreatedEvents.map((event) => ({
@@ -99,18 +120,79 @@ export function useWordleEvents() {
         }));
     }, [oracleUpdatedEvents]);
 
+    // Process match created events
+    const matchesCreated = useMemo(() => {
+        return matchCreatedEvents.map((event) => ({
+            matchId: event.args?.id?.toString() || "0",
+            creator: event.args?.creator || "",
+            stake: event.args?.stake?.toString() || "0",
+            duration: event.args?.duration?.toString() || "0",
+            txHash: event.transactionHash || "",
+            timestamp: event.timestamp || new Date(),
+            blockNumber: event.blockNumber,
+        }));
+    }, [matchCreatedEvents]);
+
+    // Process match joined events
+    const matchesJoined = useMemo(() => {
+        return matchJoinedEvents.map((event) => ({
+            matchId: event.args?.id?.toString() || "0",
+            joiner: event.args?.joiner || "",
+            stake: event.args?.stake?.toString() || "0",
+            txHash: event.transactionHash || "",
+            timestamp: event.timestamp || new Date(),
+            blockNumber: event.blockNumber,
+        }));
+    }, [matchJoinedEvents]);
+
+    // Process match guess submitted events
+    const matchGuessesSubmitted = useMemo(() => {
+        return matchGuessSubmittedEvents.map((event) => ({
+            matchId: event.args?.id?.toString() || "0",
+            player: event.args?.player || "",
+            guess: event.args?.guess || "",
+            correct: event.args?.correct || false,
+            guessCount: event.args?.guessCount?.toString() || "0",
+            txHash: event.transactionHash || "",
+            timestamp: event.timestamp || new Date(),
+            blockNumber: event.blockNumber,
+        }));
+    }, [matchGuessSubmittedEvents]);
+
+    // Process match resolved events
+    const matchesResolved = useMemo(() => {
+        return matchResolvedEvents.map((event) => ({
+            matchId: event.args?.id?.toString() || "0",
+            winner: event.args?.winner || "",
+            prize: event.args?.prize?.toString() || "0",
+            winnerGuesses: event.args?.winnerGuesses?.toString() || "0",
+            txHash: event.transactionHash || "",
+            timestamp: event.timestamp || new Date(),
+            blockNumber: event.blockNumber,
+        }));
+    }, [matchResolvedEvents]);
+
     return {
         gamesCreated,
         wordsSeeded,
         guessesSubmitted,
         gamesResolved,
         oracleUpdates,
+        // Match events
+        matchesCreated,
+        matchesJoined,
+        matchGuessesSubmitted,
+        matchesResolved,
         // Raw events if needed
         gameCreatedEvents,
         wordSeededEvents,
         guessSubmittedEvents,
         gameResolvedEvents,
         oracleUpdatedEvents,
+        matchCreatedEvents,
+        matchJoinedEvents,
+        matchGuessSubmittedEvents,
+        matchResolvedEvents,
     };
 }
 
@@ -122,7 +204,12 @@ export function useWordleNotifications(
     onWordSeeded?: (event: ContractEvent) => void,
     onGuessSubmitted?: (event: ContractEvent) => void,
     onGameResolved?: (event: ContractEvent) => void,
-    onOracleUpdated?: (event: ContractEvent) => void
+    onOracleUpdated?: (event: ContractEvent) => void,
+    // Match event handlers
+    onMatchCreated?: (event: ContractEvent) => void,
+    onMatchJoined?: (event: ContractEvent) => void,
+    onMatchGuessSubmitted?: (event: ContractEvent) => void,
+    onMatchResolved?: (event: ContractEvent) => void
 ) {
     useContractEventHandlers("SimpleWordle", {
         GameCreated: (event) => {
@@ -144,6 +231,23 @@ export function useWordleNotifications(
         OracleUpdated: (event) => {
             console.log("Oracle updated:", event.args);
             onOracleUpdated?.(event);
+        },
+        // Match event handlers
+        MatchCreated: (event) => {
+            console.log("Match created:", event.args);
+            onMatchCreated?.(event);
+        },
+        MatchJoined: (event) => {
+            console.log("Match joined:", event.args);
+            onMatchJoined?.(event);
+        },
+        MatchGuessSubmitted: (event) => {
+            console.log("Match guess submitted:", event.args);
+            onMatchGuessSubmitted?.(event);
+        },
+        MatchResolved: (event) => {
+            console.log("Match resolved:", event.args);
+            onMatchResolved?.(event);
         },
     });
 }
@@ -173,4 +277,43 @@ export function useGameEvents(gameId: number) {
     }, [gameId, gamesCreated, wordsSeeded, guessesSubmitted, gamesResolved]);
 
     return gameEvents;
+}
+
+/**
+ * Hook to get events for a specific match
+ */
+export function useMatchEvents(matchId: number) {
+    const {
+        matchesCreated,
+        matchesJoined,
+        matchGuessesSubmitted,
+        matchesResolved,
+    } = useWordleEvents();
+
+    const matchEvents = useMemo(() => {
+        const matchIdStr = matchId.toString();
+
+        return {
+            matchCreated: matchesCreated.find(
+                (event) => event.matchId === matchIdStr
+            ),
+            matchJoined: matchesJoined.find(
+                (event) => event.matchId === matchIdStr
+            ),
+            guessesSubmitted: matchGuessesSubmitted.filter(
+                (event) => event.matchId === matchIdStr
+            ),
+            matchResolved: matchesResolved.find(
+                (event) => event.matchId === matchIdStr
+            ),
+        };
+    }, [
+        matchId,
+        matchesCreated,
+        matchesJoined,
+        matchGuessesSubmitted,
+        matchesResolved,
+    ]);
+
+    return matchEvents;
 }

@@ -18,10 +18,34 @@ export function NavigationBar() {
                     <div className="flex items-center gap-8">
                         <Link href="/" className="flex items-center gap-2">
                             <div className="text-2xl font-bold gradient-text">
-                                RISE Chat
+                                CRYPTLE
                             </div>
                             <span className="text-2xl"></span>
                         </Link>
+
+                        {/* Navigation Links */}
+                        <div className="hidden md:flex items-center gap-6">
+                            <Link
+                                href="/"
+                                className={`text-sm font-medium transition-colors ${
+                                    pathname === "/"
+                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+                                }`}
+                            >
+                                Play Solo
+                            </Link>
+                            <Link
+                                href="/play1v1"
+                                className={`text-sm font-medium transition-colors ${
+                                    pathname === "/play1v1"
+                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+                                }`}
+                            >
+                                1v1 Battle ⚔️
+                            </Link>
+                        </div>
                     </div>
 
                     {/* Right side items */}

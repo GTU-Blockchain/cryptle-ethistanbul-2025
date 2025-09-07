@@ -2,31 +2,19 @@
 pragma solidity ^0.8.24;
 
 /**
- * Simple single-player Wordle backend without VRF
+ * Simple single-player Wordle backend
  *
  * What this does:
  * - Single player games (one address per game)
- * - Oracle seeds the target word as keccak256(bytes(lowercaseWord))
  * - Player submits guesses; if hash matches → win
- * - Oracle provides randomness for word selection
- *
- * Notes on randomness:
- * - Uses oracle-provided randomness (simpler than VRF)
- * - Oracle can use off-chain secure randomness
- * - Suitable for demonstration and testing
  */
 
 contract SimpleWordle {
     // --- Roles ---
     address public owner;
-    address public oracle; // your backend signer that calls seedWordHash()
 
     modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
-        _;
-    }
-    modifier onlyOracle() {
-        require(msg.sender == oracle, "not oracle");
         _;
     }
 
@@ -36,6 +24,7 @@ contract SimpleWordle {
 
     // --- Storage ---
     uint256 public nextGameId = 1;
+    uint256 public nextMatchId = 1;
 
     struct Game {
         address player;
@@ -47,7 +36,23 @@ contract SimpleWordle {
         bool won;
     }
 
+    struct Match {
+        address player1;
+        address player2;
+        bytes32 wordHash; // Same word for both players
+        uint8 player1Guesses;
+        uint8 player2Guesses;
+        uint40 startTime;
+        uint32 duration; // seconds
+        bool resolved;
+        address winner; // address(0) if no winner yet
+        uint256 stake; // Total stake amount
+        bool player1Joined;
+        bool player2Joined;
+    }
+
     mapping(uint256 => Game) public games;
+    mapping(uint256 => Match) public matches;
 
     // --- Events ---
     event GameCreated(
@@ -64,17 +69,35 @@ contract SimpleWordle {
         uint8 guessCount
     );
     event GameResolved(uint256 indexed id, bool won, uint8 usedGuesses);
-    event OracleUpdated(address oracle);
 
-    constructor(address _oracle) {
+    // Match events
+    event MatchCreated(
+        uint256 indexed id,
+        address indexed creator,
+        uint256 stake,
+        uint32 duration
+    );
+    event MatchJoined(
+        uint256 indexed id,
+        address indexed joiner,
+        uint256 stake
+    );
+    event MatchGuessSubmitted(
+        uint256 indexed id,
+        address indexed player,
+        string guess,
+        bool correct,
+        uint8 guessCount
+    );
+    event MatchResolved(
+        uint256 indexed id,
+        address indexed winner,
+        uint256 prize,
+        uint8 winnerGuesses
+    );
+
+    constructor() {
         owner = msg.sender;
-        oracle = _oracle;
-    }
-
-    // --- Admin ---
-    function setOracle(address _oracle) external onlyOwner {
-        oracle = _oracle;
-        emit OracleUpdated(_oracle);
     }
 
     // --- Game flow (single player) ---
@@ -97,7 +120,7 @@ contract SimpleWordle {
      * Oracle seeds the target word for a given game.
      * Usually computed as keccak256(bytes(wordLowercase)).
      */
-    function seedWordHash(uint256 id, bytes32 wordHash) external onlyOracle {
+    function seedWordHash(uint256 id, bytes32 wordHash) external {
         Game storage g = games[id];
         require(!g.resolved, "resolved");
         require(g.player != address(0), "no such game");
@@ -145,27 +168,151 @@ contract SimpleWordle {
         }
     }
 
-    // --- View helpers ---
-    function getGame(uint256 id) external view returns (Game memory) {
-        return games[id];
+    // --- 1vs1 Match functions ---
+
+    /**
+     * Create a 1vs1 match with stake
+     * Player stakes ETH and waits for opponent
+     */
+    function createMatch(
+        uint32 durationSeconds
+    ) external payable returns (uint256 id) {
+        require(msg.value > 0, "stake required");
+        require(msg.value >= 0.001 ether, "minimum stake 0.001 ETH");
+
+        id = nextMatchId++;
+        Match storage m = matches[id];
+        m.player1 = msg.sender;
+        m.stake = msg.value;
+        m.duration = durationSeconds == 0 ? 300 : durationSeconds; // default 5 mins
+        m.startTime = uint40(block.timestamp);
+        m.player1Joined = true;
+
+        emit MatchCreated(id, msg.sender, msg.value, m.duration);
     }
 
-    function timeLeft(uint256 id) external view returns (uint256) {
-        Game storage g = games[id];
-        if (g.resolved || g.player == address(0)) return 0;
-        uint256 end = uint256(g.startTime) + g.duration;
+    /**
+     * Join an existing match
+     * Must stake the same amount as creator
+     */
+    function joinMatch(uint256 id) external payable {
+        Match storage m = matches[id];
+        require(m.player1 != address(0), "match not found");
+        require(m.player2 == address(0), "match full");
+        require(m.player1 != msg.sender, "cannot join own match");
+        require(msg.value == m.stake, "stake mismatch");
+        require(!m.resolved, "match resolved");
+
+        m.player2 = msg.sender;
+        m.stake += msg.value; // Total stake is now 2x
+        m.player2Joined = true;
+
+        emit MatchJoined(id, msg.sender, msg.value);
+    }
+
+    /**
+     * Oracle seeds the word for a match
+     * Both players will guess the same word
+     */
+    function seedMatchWord(uint256 id, bytes32 wordHash) external {
+        Match storage m = matches[id];
+        require(m.player1 != address(0), "match not found");
+        require(m.player2 != address(0), "match not full");
+        require(!m.resolved, "match resolved");
+        require(m.wordHash == bytes32(0), "word already seeded");
+
+        m.wordHash = wordHash;
+        // Match starts when word is seeded
+        m.startTime = uint40(block.timestamp);
+    }
+
+    /**
+     * Submit guess in a match
+     * First player to guess correctly wins all stakes
+     */
+    function submitMatchGuess(uint256 id, string calldata guess) external {
+        Match storage m = matches[id];
+        require(!m.resolved, "match resolved");
+        require(m.wordHash != bytes32(0), "word not seeded");
+        require(
+            m.player1 == msg.sender || m.player2 == msg.sender,
+            "not your match"
+        );
+        require(block.timestamp <= m.startTime + m.duration, "time over");
+
+        bytes memory b = bytes(guess);
+        require(b.length == WORD_LEN, "invalid length");
+
+        bool isPlayer1 = (msg.sender == m.player1);
+        uint8 currentGuesses = isPlayer1 ? m.player1Guesses : m.player2Guesses;
+
+        require(currentGuesses < MAX_GUESSES, "guess limit");
+
+        bool correct = (keccak256(b) == m.wordHash);
+
+        if (isPlayer1) {
+            m.player1Guesses += 1;
+        } else {
+            m.player2Guesses += 1;
+        }
+
+        emit MatchGuessSubmitted(
+            id,
+            msg.sender,
+            guess,
+            correct,
+            isPlayer1 ? m.player1Guesses : m.player2Guesses
+        );
+
+        if (correct) {
+            // Winner found!
+            m.resolved = true;
+            m.winner = msg.sender;
+
+            // Transfer all stakes to winner
+            payable(msg.sender).transfer(m.stake);
+
+            emit MatchResolved(
+                id,
+                msg.sender,
+                m.stake,
+                isPlayer1 ? m.player1Guesses : m.player2Guesses
+            );
+            return;
+        }
+
+        // Check if both players exhausted their guesses or time is up
+        if (
+            (m.player1Guesses >= MAX_GUESSES &&
+                m.player2Guesses >= MAX_GUESSES) ||
+            block.timestamp > m.startTime + m.duration
+        ) {
+            m.resolved = true;
+            // No winner - refund stakes equally
+            uint256 refund = m.stake / 2;
+            payable(m.player1).transfer(refund);
+            payable(m.player2).transfer(refund);
+
+            emit MatchResolved(id, address(0), 0, 0);
+        }
+    }
+
+    // --- View helpers for matches ---
+    function getMatch(uint256 id) external view returns (Match memory) {
+        return matches[id];
+    }
+
+    function getMatchTimeLeft(uint256 id) external view returns (uint256) {
+        Match storage m = matches[id];
+        if (m.resolved || m.player1 == address(0)) return 0;
+        uint256 end = uint256(m.startTime) + m.duration;
         return block.timestamp >= end ? 0 : (end - block.timestamp);
     }
 
-    // --- Oracle utilities ---
-
-    /**
-     * Oracle can request a new game for automated testing or demo purposes
-     */
     function createGameForPlayer(
         address player,
         uint32 durationSeconds
-    ) external onlyOracle returns (uint256 id) {
+    ) external returns (uint256 id) {
         id = nextGameId++;
         Game storage g = games[id];
         g.player = player;
@@ -175,14 +322,11 @@ contract SimpleWordle {
         emit GameCreated(id, player, g.duration);
     }
 
-    /**
-     * Oracle can immediately seed a word when creating a game
-     */
     function createGameWithWord(
         address player,
         uint32 durationSeconds,
         bytes32 wordHash
-    ) external onlyOracle returns (uint256 id) {
+    ) external returns (uint256 id) {
         id = nextGameId++;
         Game storage g = games[id];
         g.player = player;
@@ -201,7 +345,7 @@ contract SimpleWordle {
         address[] calldata players,
         uint32 durationSeconds,
         bytes32[] calldata wordHashes
-    ) external onlyOracle returns (uint256[] memory gameIds) {
+    ) external returns (uint256[] memory gameIds) {
         require(players.length == wordHashes.length, "array length mismatch");
 
         gameIds = new uint256[](players.length);

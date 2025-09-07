@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-
 export default function Home() {
     const { address, isConnected } = useAccount();
     const [currentStep, setCurrentStep] = useState(0);
@@ -36,9 +35,15 @@ export default function Home() {
             {/* Arka plan efektleri */}
             <div className="pointer-events-none select-none absolute inset-0 z-0">
                 {/* Sol üstte blur ve hafif mavi glow */}
-                <div className="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full bg-cyan-700/20 blur-3xl" style={{filter:'blur(80px)'}} />
+                <div
+                    className="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full bg-cyan-700/20 blur-3xl"
+                    style={{ filter: "blur(80px)" }}
+                />
                 {/* Sağ altta morumsu blur */}
-                <div className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-blue-900/30 blur-2xl" style={{filter:'blur(60px)'}} />
+                <div
+                    className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-blue-900/30 blur-2xl"
+                    style={{ filter: "blur(60px)" }}
+                />
                 {/* Orta üstte hafif degrade çizgi */}
                 <div className="absolute left-1/2 -translate-x-1/2 top-0 w-2/3 h-12 bg-gradient-to-r from-cyan-400/10 via-white/10 to-blue-400/10 rounded-b-3xl blur" />
             </div>
@@ -53,24 +58,36 @@ export default function Home() {
                         transition={{ duration: 1.5, type: "spring" }}
                         viewport={{ once: false }}
                     >
-                        Guess the Word.<br />
-                        Stake.<br />
+                        Guess the Word.
+                        <br />
+                        Stake.
+                        <br />
                         Win Rewards.
                     </motion.h1>
                     <motion.p
                         className="text-xl md:text-2xl text-slate-300 mb-12 max-w-4xl mx-auto leading-relaxed"
                         initial={{ opacity: 0, y: 40 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 1.2, type: "spring" }}
+                        transition={{
+                            delay: 0.2,
+                            duration: 1.2,
+                            type: "spring",
+                        }}
                         viewport={{ once: false }}
                     >
-                        The ultimate on-chain word puzzle game. Connect your wallet, stake your claim, and outsmart the dictionary to win big.
+                        The ultimate on-chain word puzzle game. Connect your
+                        wallet, stake your claim, and outsmart the dictionary to
+                        win big.
                     </motion.p>
                     <motion.div
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center"
                         initial={{ opacity: 0, scale: 0.95 }}
                         whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4, duration: 1.1, type: "spring" }}
+                        transition={{
+                            delay: 0.4,
+                            duration: 1.1,
+                            type: "spring",
+                        }}
                         viewport={{ once: false }}
                     >
                         {isConnected && address ? (
@@ -125,17 +142,33 @@ export default function Home() {
                         <div className="bg-slate-900/80 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20 shadow-2xl">
                             {/* Örnek kelime: WORLD */}
                             <div className="grid grid-cols-5 gap-3 mb-4">
-                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-green-600 text-white text-2xl font-bold">W</div>
-                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">O</div>
-                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-yellow-500 text-white text-2xl font-bold">R</div>
-                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">L</div>
-                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">D</div>
+                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-green-600 text-white text-2xl font-bold">
+                                    W
+                                </div>
+                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">
+                                    O
+                                </div>
+                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-yellow-500 text-white text-2xl font-bold">
+                                    R
+                                </div>
+                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">
+                                    L
+                                </div>
+                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">
+                                    D
+                                </div>
                             </div>
                             {/* Boş satırlar */}
                             {[...Array(5)].map((_, rowIdx) => (
-                                <div key={rowIdx} className="grid grid-cols-5 gap-3 mb-4">
+                                <div
+                                    key={rowIdx}
+                                    className="grid grid-cols-5 gap-3 mb-4"
+                                >
                                     {[...Array(5)].map((_, i) => (
-                                        <div key={i} className="w-16 h-16 bg-slate-700 rounded-lg border-2 border-slate-600"></div>
+                                        <div
+                                            key={i}
+                                            className="w-16 h-16 bg-slate-700 rounded-lg border-2 border-slate-600"
+                                        ></div>
                                     ))}
                                 </div>
                             ))}
@@ -150,12 +183,13 @@ export default function Home() {
                         viewport={{ once: false }}
                     >
                         <p className="text-slate-400 text-lg mb-6">
-                            Guess the 5-letter word in 6 tries. Each guess must be a valid word.
+                            Guess the 5-letter word in 6 tries. Each guess must
+                            be a valid word.
                         </p>
                         <div className="flex justify-center gap-8 text-sm text-slate-500">
                             <div className="flex items-center gap-2">
                                 <div className="w-4 h-4 bg-green-500 rounded"></div>
-                            <span>Correct letter & position</span>
+                                <span>Correct letter & position</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-4 h-4 bg-yellow-500 rounded"></div>
@@ -181,15 +215,20 @@ export default function Home() {
                         viewport={{ once: false }}
                     >
                         How It Works
-                        </motion.h2>
+                    </motion.h2>
                     <motion.p
                         className="text-xl text-slate-300 text-center mb-16 max-w-3xl mx-auto"
                         initial={{ opacity: 0, y: 40 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 1.2, type: "spring" }}
+                        transition={{
+                            delay: 0.2,
+                            duration: 1.2,
+                            type: "spring",
+                        }}
                         viewport={{ once: false }}
                     >
-                        A seamless, step-by-step guide to your WordChain adventure.
+                        A seamless, step-by-step guide to your WordChain
+                        adventure.
                     </motion.p>
                     <motion.div
                         className="relative overflow-hidden"
@@ -201,20 +240,35 @@ export default function Home() {
                         <div
                             className="flex transition-transform duration-500 ease-in-out"
                             id="steps-container"
-                            style={{ transform: `translateX(-${currentStep * 100}%)` }}
+                            style={{
+                                transform: `translateX(-${currentStep * 100}%)`,
+                            }}
                         >
                             {/* Step 1: Connect Wallet */}
                             <div className="w-full flex-shrink-0 px-4">
                                 <div className="max-w-md mx-auto">
                                     <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/30 shadow-2xl">
                                         <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full border-2 border-cyan-500/50">
-                                            <svg className="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            <svg
+                                                className="w-10 h-10 text-cyan-400"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={1.5}
+                                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                                                />
                                             </svg>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">Connect Wallet</h3>
+                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">
+                                            Connect Wallet
+                                        </h3>
                                         <p className="text-slate-300 text-center leading-relaxed">
-                                            Your secure gateway to the blockchain gaming world.
+                                            Your secure gateway to the
+                                            blockchain gaming world.
                                         </p>
                                     </div>
                                 </div>
@@ -225,13 +279,26 @@ export default function Home() {
                                 <div className="max-w-md mx-auto">
                                     <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/30 shadow-2xl">
                                         <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full border-2 border-purple-500/50">
-                                            <svg className="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                            <svg
+                                                className="w-10 h-10 text-purple-400"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={1.5}
+                                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                                                />
                                             </svg>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">Stake & Play</h3>
+                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">
+                                            Stake & Play
+                                        </h3>
                                         <p className="text-slate-300 text-center leading-relaxed">
-                                            Put your tokens on the line to join the daily challenge.
+                                            Put your tokens on the line to join
+                                            the daily challenge.
                                         </p>
                                     </div>
                                 </div>
@@ -242,13 +309,26 @@ export default function Home() {
                                 <div className="max-w-md mx-auto">
                                     <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/30 shadow-2xl">
                                         <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full border-2 border-purple-500/50">
-                                            <svg className="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                            <svg
+                                                className="w-10 h-10 text-purple-400"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={1.5}
+                                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                                                />
                                             </svg>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">Guess the Word</h3>
+                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">
+                                            Guess the Word
+                                        </h3>
                                         <p className="text-slate-300 text-center leading-relaxed">
-                                            Six tries to solve the secret five-letter word.
+                                            Six tries to solve the secret
+                                            five-letter word.
                                         </p>
                                     </div>
                                 </div>
@@ -259,13 +339,26 @@ export default function Home() {
                                 <div className="max-w-md mx-auto">
                                     <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/30 shadow-2xl">
                                         <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full border-2 border-purple-500/50">
-                                            <svg className="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                            <svg
+                                                className="w-10 h-10 text-purple-400"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={1.5}
+                                                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                                                />
                                             </svg>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">Win & Earn</h3>
+                                        <h3 className="text-2xl font-bold text-white mb-4 text-center">
+                                            Win & Earn
+                                        </h3>
                                         <p className="text-slate-300 text-center leading-relaxed">
-                                            Claim your rewards and climb the leaderboards.
+                                            Claim your rewards and climb the
+                                            leaderboards.
                                         </p>
                                     </div>
                                 </div>
@@ -273,58 +366,77 @@ export default function Home() {
                         </div>
                     </motion.div>
 
-                        {/* Navigation Controls */}
-                        <div className="flex justify-center items-center mt-12 gap-4">
-                            <button 
-                                onClick={() => scrollStep(-1)}
-                                className="w-12 h-12 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-cyan-400 transition-colors"
-                                id="prev-btn"
+                    {/* Navigation Controls */}
+                    <div className="flex justify-center items-center mt-12 gap-4">
+                        <button
+                            onClick={() => scrollStep(-1)}
+                            className="w-12 h-12 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-cyan-400 transition-colors"
+                            id="prev-btn"
+                        >
+                            <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-                            
-                            <div className="flex gap-2">
-                                <button 
-                                    onClick={() => scrollToStep(0)}
-                                    className="w-3 h-3 bg-cyan-500 rounded-full transition-all"
-                                    id="dot-0"
-                                ></button>
-                                <button 
-                                    onClick={() => scrollToStep(1)}
-                                    className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
-                                    id="dot-1"
-                                ></button>
-                                <button 
-                                    onClick={() => scrollToStep(2)}
-                                    className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
-                                    id="dot-2"
-                                ></button>
-                                <button 
-                                    onClick={() => scrollToStep(3)}
-                                    className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
-                                    id="dot-3"
-                                ></button>
-                            </div>
-                            
-                            <button 
-                                onClick={() => scrollStep(1)}
-                                className="w-12 h-12 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-cyan-400 transition-colors"
-                                id="next-btn"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                />
+                            </svg>
+                        </button>
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => scrollToStep(0)}
+                                className="w-3 h-3 bg-cyan-500 rounded-full transition-all"
+                                id="dot-0"
+                            ></button>
+                            <button
+                                onClick={() => scrollToStep(1)}
+                                className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
+                                id="dot-1"
+                            ></button>
+                            <button
+                                onClick={() => scrollToStep(2)}
+                                className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
+                                id="dot-2"
+                            ></button>
+                            <button
+                                onClick={() => scrollToStep(3)}
+                                className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
+                                id="dot-3"
+                            ></button>
                         </div>
 
-                        <p className="text-center text-slate-500 text-sm mt-4">
-                            Swipe or use arrows to see the next step
-                        </p>
+                        <button
+                            onClick={() => scrollStep(1)}
+                            className="w-12 h-12 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-cyan-400 transition-colors"
+                            id="next-btn"
+                        >
+                            <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </button>
                     </div>
-                </section>
-            </div>
+
+                    <p className="text-center text-slate-500 text-sm mt-4">
+                        Swipe or use arrows to see the next step
+                    </p>
+                </div>
+            </section>
+        </div>
     );
 }
-

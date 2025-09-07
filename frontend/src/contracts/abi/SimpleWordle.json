@@ -1,471 +1,730 @@
 [
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_oracle",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "player",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint32",
-                "name": "duration",
-                "type": "uint32"
-            }
-        ],
-        "name": "GameCreated",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "bool",
-                "name": "won",
-                "type": "bool"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint8",
-                "name": "usedGuesses",
-                "type": "uint8"
-            }
-        ],
-        "name": "GameResolved",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "player",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "guess",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "bool",
-                "name": "correct",
-                "type": "bool"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint8",
-                "name": "guessCount",
-                "type": "uint8"
-            }
-        ],
-        "name": "GuessSubmitted",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "oracle",
-                "type": "address"
-            }
-        ],
-        "name": "OracleUpdated",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "wordHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "WordSeeded",
-        "type": "event"
-    },
-    {
-        "inputs": [],
-        "name": "MAX_GUESSES",
-        "outputs": [
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "WORD_LEN",
-        "outputs": [
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address[]",
-                "name": "players",
-                "type": "address[]"
-            },
-            {
-                "internalType": "uint32",
-                "name": "durationSeconds",
-                "type": "uint32"
-            },
-            {
-                "internalType": "bytes32[]",
-                "name": "wordHashes",
-                "type": "bytes32[]"
-            }
-        ],
-        "name": "batchCreateGames",
-        "outputs": [
-            {
-                "internalType": "uint256[]",
-                "name": "gameIds",
-                "type": "uint256[]"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint32",
-                "name": "durationSeconds",
-                "type": "uint32"
-            }
-        ],
-        "name": "createGame",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "player",
-                "type": "address"
-            },
-            {
-                "internalType": "uint32",
-                "name": "durationSeconds",
-                "type": "uint32"
-            }
-        ],
-        "name": "createGameForPlayer",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "player",
-                "type": "address"
-            },
-            {
-                "internalType": "uint32",
-                "name": "durationSeconds",
-                "type": "uint32"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "wordHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "createGameWithWord",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "games",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "player",
-                "type": "address"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "wordHash",
-                "type": "bytes32"
-            },
-            {
-                "internalType": "uint8",
-                "name": "guesses",
-                "type": "uint8"
-            },
-            {
-                "internalType": "uint40",
-                "name": "startTime",
-                "type": "uint40"
-            },
-            {
-                "internalType": "uint32",
-                "name": "duration",
-                "type": "uint32"
-            },
-            {
-                "internalType": "bool",
-                "name": "resolved",
-                "type": "bool"
-            },
-            {
-                "internalType": "bool",
-                "name": "won",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            }
-        ],
-        "name": "getGame",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "player",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes32",
-                        "name": "wordHash",
-                        "type": "bytes32"
-                    },
-                    {
-                        "internalType": "uint8",
-                        "name": "guesses",
-                        "type": "uint8"
-                    },
-                    {
-                        "internalType": "uint40",
-                        "name": "startTime",
-                        "type": "uint40"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "duration",
-                        "type": "uint32"
-                    },
-                    {
-                        "internalType": "bool",
-                        "name": "resolved",
-                        "type": "bool"
-                    },
-                    {
-                        "internalType": "bool",
-                        "name": "won",
-                        "type": "bool"
-                    }
-                ],
-                "internalType": "struct SimpleWordle.Game",
-                "name": "",
-                "type": "tuple"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "nextGameId",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "oracle",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "owner",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "wordHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "seedWordHash",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_oracle",
-                "type": "address"
-            }
-        ],
-        "name": "setOracle",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "internalType": "string",
-                "name": "guess",
-                "type": "string"
-            }
-        ],
-        "name": "submitGuess",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            }
-        ],
-        "name": "timeLeft",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    }
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint32",
+				"name": "duration",
+				"type": "uint32"
+			}
+		],
+		"name": "GameCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "won",
+				"type": "bool"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint8",
+				"name": "usedGuesses",
+				"type": "uint8"
+			}
+		],
+		"name": "GameResolved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "guess",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "correct",
+				"type": "bool"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint8",
+				"name": "guessCount",
+				"type": "uint8"
+			}
+		],
+		"name": "GuessSubmitted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "creator",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "stake",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint32",
+				"name": "duration",
+				"type": "uint32"
+			}
+		],
+		"name": "MatchCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "guess",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "correct",
+				"type": "bool"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint8",
+				"name": "guessCount",
+				"type": "uint8"
+			}
+		],
+		"name": "MatchGuessSubmitted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "joiner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "stake",
+				"type": "uint256"
+			}
+		],
+		"name": "MatchJoined",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "winner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "prize",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint8",
+				"name": "winnerGuesses",
+				"type": "uint8"
+			}
+		],
+		"name": "MatchResolved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "wordHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "WordSeeded",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "MAX_GUESSES",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "WORD_LEN",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address[]",
+				"name": "players",
+				"type": "address[]"
+			},
+			{
+				"internalType": "uint32",
+				"name": "durationSeconds",
+				"type": "uint32"
+			},
+			{
+				"internalType": "bytes32[]",
+				"name": "wordHashes",
+				"type": "bytes32[]"
+			}
+		],
+		"name": "batchCreateGames",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "gameIds",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint32",
+				"name": "durationSeconds",
+				"type": "uint32"
+			}
+		],
+		"name": "createGame",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"internalType": "uint32",
+				"name": "durationSeconds",
+				"type": "uint32"
+			}
+		],
+		"name": "createGameForPlayer",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"internalType": "uint32",
+				"name": "durationSeconds",
+				"type": "uint32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "wordHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "createGameWithWord",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint32",
+				"name": "durationSeconds",
+				"type": "uint32"
+			}
+		],
+		"name": "createMatch",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "games",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "wordHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint8",
+				"name": "guesses",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint40",
+				"name": "startTime",
+				"type": "uint40"
+			},
+			{
+				"internalType": "uint32",
+				"name": "duration",
+				"type": "uint32"
+			},
+			{
+				"internalType": "bool",
+				"name": "resolved",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "won",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "getMatch",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "address",
+						"name": "player1",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "player2",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "wordHash",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint8",
+						"name": "player1Guesses",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint8",
+						"name": "player2Guesses",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint40",
+						"name": "startTime",
+						"type": "uint40"
+					},
+					{
+						"internalType": "uint32",
+						"name": "duration",
+						"type": "uint32"
+					},
+					{
+						"internalType": "bool",
+						"name": "resolved",
+						"type": "bool"
+					},
+					{
+						"internalType": "address",
+						"name": "winner",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "stake",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "player1Joined",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "player2Joined",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct SimpleWordle.Match",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "getMatchTimeLeft",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "joinMatch",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "matches",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "player1",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "player2",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "wordHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint8",
+				"name": "player1Guesses",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint8",
+				"name": "player2Guesses",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint40",
+				"name": "startTime",
+				"type": "uint40"
+			},
+			{
+				"internalType": "uint32",
+				"name": "duration",
+				"type": "uint32"
+			},
+			{
+				"internalType": "bool",
+				"name": "resolved",
+				"type": "bool"
+			},
+			{
+				"internalType": "address",
+				"name": "winner",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "stake",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "player1Joined",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "player2Joined",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "nextGameId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "nextMatchId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "wordHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "seedMatchWord",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "wordHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "seedWordHash",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "guess",
+				"type": "string"
+			}
+		],
+		"name": "submitGuess",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "guess",
+				"type": "string"
+			}
+		],
+		"name": "submitMatchGuess",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
 ]
