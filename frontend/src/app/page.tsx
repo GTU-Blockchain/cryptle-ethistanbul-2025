@@ -10,6 +10,78 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export default function Home() {
+    // Random word boxes for background
+    const renderBackgroundWordBoxes = () => {
+        const words: string[] = [
+            "RISE",
+            "WEB3",
+            "DApp",
+            "Crypto"
+        ];
+        return (
+            <div className="pointer-events-none select-none absolute inset-0 z-0">
+                {words.map((word: string, idx: number) => {
+                    const left = Math.random() * 80;
+                    const top = Math.random() * 80;
+                    const size = 38 + Math.random() * 32;
+                    const opacity = 0.08 + Math.random() * 0.10;
+                    return (
+                        <div
+                            key={word + idx}
+                            style={{
+                                left: `${left}%`,
+                                top: `${top}%`,
+                                opacity,
+                                fontSize: size,
+                            }}
+                            className="absolute flex gap-2"
+                        >
+                            {word.split("").map((char, i) => (
+                                <div
+                                    key={i}
+                                    className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-lg border border-slate-400/20 bg-slate-200/10 text-slate-200/30 font-extrabold shadow"
+                                    style={{ fontSize: size * 0.8 }}
+                                >
+                                    {char}
+                                </div>
+                            ))}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+    // Random letters background for hero
+    const renderBackgroundLetters = () => {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return (
+            <div className="pointer-events-none select-none absolute inset-0 z-0">
+                {[...Array(80)].map((_, i) => {
+                    const letter = letters[Math.floor(Math.random() * letters.length)];
+                    const left = Math.random() * 100;
+                    const top = Math.random() * 100;
+                    const size = 32 + Math.random() * 80;
+                    const rotate = Math.random() * 360;
+                    const opacity = 0.04 + Math.random() * 0.09;
+                    return (
+                        <span
+                            key={i}
+                            style={{
+                                left: `${left}%`,
+                                top: `${top}%`,
+                                fontSize: size,
+                                opacity,
+                                transform: `rotate(${rotate}deg)`
+                            }}
+                            className="absolute font-extrabold text-slate-200/20"
+                        >
+                            {letter}
+                        </span>
+                    );
+                })}
+            </div>
+        );
+    };
     const { address, isConnected } = useAccount();
     const [currentStep, setCurrentStep] = useState(0);
     const [showStartAnim, setShowStartAnim] = useState(false);
@@ -32,6 +104,8 @@ export default function Home() {
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-slate-900">
+            {renderBackgroundLetters()}
+            {renderBackgroundWordBoxes()}
             {/* Arka plan efektleri */}
             <div className="pointer-events-none select-none absolute inset-0 z-0">
                 {/* Sol üstte blur ve hafif mavi glow */}
@@ -143,16 +217,16 @@ export default function Home() {
                             {/* Örnek kelime: WORLD */}
                             <div className="grid grid-cols-5 gap-3 mb-4">
                                 <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-green-600 text-white text-2xl font-bold">
-                                    W
+                                    G
                                 </div>
                                 <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">
-                                    O
-                                </div>
-                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-yellow-500 text-white text-2xl font-bold">
                                     R
                                 </div>
+                                <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-yellow-500 text-white text-2xl font-bold">
+                                    I
+                                </div>
                                 <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">
-                                    L
+                                    N
                                 </div>
                                 <div className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-slate-600 bg-slate-700 text-white text-2xl font-bold">
                                     D
@@ -391,22 +465,22 @@ export default function Home() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => scrollToStep(0)}
-                                className="w-3 h-3 bg-cyan-500 rounded-full transition-all"
+                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 0 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
                                 id="dot-0"
                             ></button>
                             <button
                                 onClick={() => scrollToStep(1)}
-                                className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
+                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 1 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
                                 id="dot-1"
                             ></button>
                             <button
                                 onClick={() => scrollToStep(2)}
-                                className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
+                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 2 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
                                 id="dot-2"
                             ></button>
                             <button
                                 onClick={() => scrollToStep(3)}
-                                className="w-3 h-3 bg-slate-600 hover:bg-slate-500 rounded-full transition-all"
+                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 3 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
                                 id="dot-3"
                             ></button>
                         </div>

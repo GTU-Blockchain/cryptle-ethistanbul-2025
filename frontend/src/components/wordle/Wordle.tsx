@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useAccount, useBalance } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
 import { WalletSelector } from "../WalletSelector";
+import Link from "next/link";
 import { isValidWord } from "@/lib/words";
 import { Words } from "@/lib/word-list";
-import Confetti from "react-confetti";
 import { useWordleContract } from "@/hooks/wordle/useWordleContract";
 import { useWordleEvents } from "@/hooks/wordle/useWordleEvents";
 import { keccak256, toUtf8Bytes } from "ethers";
+import Confetti from "react-confetti";
 import { parseEther, formatEther } from "viem";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
@@ -39,6 +41,7 @@ export function Wordle() {
         Record<string, LetterState>
     >({});
     const [inputValue, setInputValue] = useState<string>("");
+    const [animatingRow, setAnimatingRow] = useState<number | null>(null);
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [showConfetti, setShowConfetti] = useState<boolean>(false);
     const [gameId, setGameId] = useState<string | null>(null);
@@ -277,9 +280,22 @@ export function Wordle() {
                 ),
             }));
 
-        setGuesses([...guesses, newGuess]);
+        setGuesses(prev => {
+            setAnimatingRow(prev.length); // yeni eklenen satırın index'i
+            return [...prev, newGuess];
+        });
         updateLetterStates(newGuess);
 
+        /*setTimeout(() => {
+            if (guessToSubmit.toUpperCase() === targetWord) {
+                setGameWon(true);
+                setGameOver(true);
+            } else if (guesses.length === 5) {
+                setGameOver(true);
+            }
+            setAnimatingRow(null);
+        }, 5 * 120); */// 5 harf * 120ms gecikme
+        
         if (guessToSubmit.toUpperCase() === targetWord) {
             setGameWon(true);
             setGameOver(true);
@@ -323,17 +339,33 @@ export function Wordle() {
         const rows = [];
         // Render completed guesses
         for (let i = 0; i < guesses.length; i++) {
+            const isAnimating = i === animatingRow;
             rows.push(
                 <div key={i} className="flex gap-2">
                     {guesses[i].map((letter, j) => (
-                        <div
-                            key={j}
-                            className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
-                                letter.state
-                            )}`}
-                        >
-                            {letter.letter}
-                        </div>
+                        isAnimating ? (
+                            <motion.div
+                                key={j}
+                                initial={{ opacity: 0, scale: 0.7 }}
+                                animate={{ opacity: 1, scale: 1.1 }}
+                                transition={{ delay: j * 0.12, duration: 0.32, type: "spring" }}
+                                className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
+                                    letter.state
+                                )}`}
+                                style={{ willChange: "opacity, transform" }}
+                            >
+                                {letter.letter}
+                            </motion.div>
+                        ) : (
+                            <div
+                                key={j}
+                                className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
+                                    letter.state
+                                )}`}
+                            >
+                                {letter.letter}
+                            </div>
+                        )
                     ))}
                 </div>
             );
@@ -498,7 +530,7 @@ export function Wordle() {
                         (Your stake: {stakeAmount} ETH + 50% bonus)
                     </p>
                 </div>
-            )}
+            )}*/
 
             {gameOver && !gameWon && (
                 <div className="text-center mb-8">
