@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
 import { WalletSelector } from "../WalletSelector";
+import { isValidWord, getRandomTargetWord } from "@/lib/words";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
 
@@ -11,8 +12,6 @@ interface Letter {
     letter: string;
     state: LetterState;
 }
-
-const WORDS = ["CRANE"];
 
 export function Wordle() {
     const { address, isConnected } = useAccount();
@@ -44,7 +43,7 @@ export function Wordle() {
 
     // Initialize game
     useEffect(() => {
-        const randomWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+        const randomWord = getRandomTargetWord();
         setTargetWord(randomWord);
         console.log("Target word:", randomWord); // For debugging
     }, []);
@@ -87,7 +86,17 @@ export function Wordle() {
     const guessToSubmit = inputValue.length === 5 ? inputValue : currentGuess;
     if (guessToSubmit.length !== 5 || guesses.length >= 6) return;
 
-        const newGuess: Letter[] = guessToSubmit
+        // Check if the word is valid
+        if (!isValidWord(currentGuess)) {
+            setErrorMessage("Not a valid word!");
+            setTimeout(() => setErrorMessage(""), 2000); // Clear error after 2 seconds
+            return;
+        }
+
+        // Clear any previous error
+        setErrorMessage("");
+
+        const newGuess: Letter[] = currentGuess
             .split("")
             .map((letter, index) => ({
                 letter: letter.toUpperCase(),
@@ -197,16 +206,14 @@ export function Wordle() {
             <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center">Word of the Day</h1>
             <p className="text-slate-300 text-lg mb-8 text-center">Guess the hidden word in 6 tries.</p>
 
-            <div className="mb-8">
-                <div className="flex flex-col gap-2">
-                    {renderGrid()}
+            {/* Error message */}
+            {errorMessage && (
+                <div className="mb-4 px-4 py-2 bg-red-600 text-white rounded-lg text-center font-semibold">
+                    {errorMessage}
                 </div>
-            </div>
+            )}
 
-            <div className="text-center mb-6">
-                <span className="text-slate-400 text-base">Attempts remaining: </span>
-                <span className="text-white text-lg font-bold">{6 - guesses.length}</span>
-            </div>
+            <div className="mb-8">{renderGrid()}</div>
 
             {gameOver && (
                 <div className="text-center mb-8">
