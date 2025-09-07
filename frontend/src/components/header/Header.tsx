@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import styles from './Header.module.css';
+import { WalletSelector } from '../WalletSelector';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function Header() {
     <header className={styles.header}>
         <div className={styles.headerContent}>
           {/* Logo */}
+          <div className='flex justify-between w-full mx-10'>
           <div className={styles.logoSection}>
             <Link href="/" className={styles.logoLink}>
               <div className={styles.logoIcon}>
@@ -45,24 +47,25 @@ export default function Header() {
                 </svg>
               </div>
               <span className={styles.logoText}>
-                SEEKify
+                Cryptle
               </span>
             </Link>
           </div>
-
           {/* Desktop Navigation */}
           <nav className={styles.desktopNav}>
             <Link 
               href="/" 
               className={styles.navLink}
+              onClick={(e) => {
+                e.preventDefault();
+                if (window.location.pathname !== "/") {
+                  window.location.href = "/";
+                } else {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
             >
               Home
-            </Link>
-            <Link 
-              href="/play" 
-              className={styles.navLink}
-            >
-              Play
             </Link>
             <Link 
               href="/leaderboard" 
@@ -70,28 +73,30 @@ export default function Header() {
             >
               Leaderboard
             </Link>
-            <Link 
-              href="/how-it-works" 
+            <a 
+              href="#how-it-works" 
               className={styles.navLink}
+              onClick={(e) => {
+                e.preventDefault();
+                if (window.location.pathname !== "/") {
+                  window.location.href = "/#how-it-works";
+                } else {
+                  const el = document.getElementById('how-it-works');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    // Eğer hash ile gelindiyse ve element henüz yüklenmediyse kısa bir bekleme ile tekrar dene
+                    setTimeout(() => {
+                      document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 300);
+                  }
+                }
+              }}
             >
               How It Works
-            </Link>
+            </a>
           </nav>
-
-          {/* Desktop CTA Buttons */}
-          <div className={styles.desktopCta}>
-            <button 
-              className={styles.playButton}
-              onClick={() => window.location.href = '/play'}
-            >
-              Play Now
-            </button>
-            <button 
-              className={styles.connectButton}
-              onClick={connectWallet}
-            >
-              {isWalletConnected ? 'Connected' : 'Connect Wallet'}
-            </button>
+            <WalletSelector />
           </div>
 
           {/* Mobile menu button */}
@@ -117,7 +122,15 @@ export default function Header() {
                 <Link 
                   href="/" 
                   className={styles.mobileNavLink}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMenuOpen(false);
+                    if (window.location.pathname !== "/") {
+                      window.location.href = "/";
+                    } else {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
                 >
                   Home
                 </Link>
@@ -135,33 +148,28 @@ export default function Header() {
                 >
                   Leaderboard
                 </Link>
-                <Link 
-                  href="/how-it-works" 
+                <a 
+                  href="#how-it-works" 
                   className={styles.mobileNavLink}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMenuOpen(false);
+                    if (window.location.pathname !== "/") {
+                      window.location.href = "/#how-it-works";
+                    } else {
+                      const el = document.getElementById('how-it-works');
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                      } else {
+                        setTimeout(() => {
+                          document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                        }, 300);
+                      }
+                    }
+                  }}
                 >
                   How It Works
-                </Link>
-              </div>
-              <div className={styles.mobileCta}>
-                <button 
-                  className={styles.mobilePlayButton}
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    window.location.href = '/play';
-                  }}
-                >
-                  Play Now
-                </button>
-                <button 
-                  className={styles.mobileConnectButton}
-                  onClick={() => {
-                    connectWallet();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  {isWalletConnected ? 'Connected' : 'Connect Wallet'}
-                </button>
+                </a>
               </div>
             </div>
           </div>

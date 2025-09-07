@@ -20,10 +20,8 @@ export function Wordle() {
     const [targetWord, setTargetWord] = useState<string>("");
     const [gameOver, setGameOver] = useState<boolean>(false);
     const [gameWon, setGameWon] = useState<boolean>(false);
-    const [letterStates, setLetterStates] = useState<
-        Record<string, LetterState>
-    >({});
-    const [errorMessage, setErrorMessage] = useState<string>("");
+    const [letterStates, setLetterStates] = useState<Record<string, LetterState>>({});
+    const [inputValue, setInputValue] = useState<string>("");
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -84,7 +82,9 @@ export function Wordle() {
     };
 
     const submitGuess = () => {
-        if (currentGuess.length !== 5 || guesses.length >= 6) return;
+    // inputValue ile de submit edilebilsin
+    const guessToSubmit = inputValue.length === 5 ? inputValue : currentGuess;
+    if (guessToSubmit.length !== 5 || guesses.length >= 6) return;
 
         // Check if the word is valid
         if (!isValidWord(currentGuess)) {
@@ -103,14 +103,14 @@ export function Wordle() {
                 state: getLetterState(
                     letter.toUpperCase(),
                     index,
-                    currentGuess
+                    guessToSubmit
                 ),
             }));
 
         setGuesses([...guesses, newGuess]);
         updateLetterStates(newGuess);
 
-        if (currentGuess.toUpperCase() === targetWord) {
+        if (guessToSubmit.toUpperCase() === targetWord) {
             setGameWon(true);
             setGameOver(true);
         } else if (guesses.length === 5) {
@@ -118,6 +118,7 @@ export function Wordle() {
         }
 
         setCurrentGuess("");
+        setInputValue("");
     };
 
     const handleKeyPress = (key: string) => {
@@ -147,15 +148,14 @@ export function Wordle() {
 
     const renderGrid = () => {
         const rows = [];
-
         // Render completed guesses
         for (let i = 0; i < guesses.length; i++) {
             rows.push(
-                <div key={i} className="flex gap-1">
+                <div key={i} className="flex gap-2">
                     {guesses[i].map((letter, j) => (
                         <div
                             key={j}
-                            className={`w-12 h-12 flex items-center justify-center text-white font-bold text-lg border-2 border-gray-600 ${getCellColor(
+                            className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
                                 letter.state
                             )}`}
                         >
@@ -165,7 +165,6 @@ export function Wordle() {
                 </div>
             );
         }
-
         // Render current guess
         if (guesses.length < 6 && !gameOver) {
             const currentRow = [];
@@ -174,39 +173,38 @@ export function Wordle() {
                 currentRow.push(
                     <div
                         key={i}
-                        className="w-12 h-12 flex items-center justify-center text-white font-bold text-lg border-2 border-gray-600 bg-gray-800"
+                        className="w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] bg-[#232b39]"
                     >
                         {letter}
                     </div>
                 );
             }
             rows.push(
-                <div key="current" className="flex gap-1">
+                <div key="current" className="flex gap-2">
                     {currentRow}
                 </div>
             );
         }
-
         // Render empty rows
         for (let i = guesses.length + (gameOver ? 0 : 1); i < 6; i++) {
             rows.push(
-                <div key={i} className="flex gap-1">
+                <div key={i} className="flex gap-2">
                     {Array.from({ length: 5 }, (_, j) => (
                         <div
                             key={j}
-                            className="w-12 h-12 flex items-center justify-center text-white font-bold text-lg border-2 border-gray-600 bg-gray-800"
+                            className="w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] bg-[#232b39]"
                         ></div>
                     ))}
                 </div>
             );
         }
-
         return rows;
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-8">
-            <h1 className="text-4xl font-bold mb-8">CRYPTLE</h1>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#151a23] text-white px-4 py-8">
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center">Word of the Day</h1>
+            <p className="text-slate-300 text-lg mb-8 text-center">Guess the hidden word in 6 tries.</p>
 
             {/* Error message */}
             {errorMessage && (
@@ -225,7 +223,7 @@ export function Wordle() {
                         </p>
                     ) : (
                         <p className="text-red-500 text-xl font-bold">
-                            Game Over! The word was:{" "}
+                            Game Over! The word was: {" "}
                             <span className="text-yellow-500">
                                 {targetWord}
                             </span>
@@ -234,20 +232,15 @@ export function Wordle() {
                 </div>
             )}
 
-            <div className="mt-8">
+            <div className="mt-4">
                 <Keyboard
                     onKeyPress={handleKeyPress}
                     letterStates={letterStates}
                 />
             </div>
 
-            <div className="text-sm text-gray-400 mt-4">
-                <p>Type your guess and press Enter</p>
-                <p>Only valid 5-letter English words are accepted</p>
-                <p>
-                    Green = correct position, Yellow = wrong position, Gray =
-                    not in word
-                </p>
+            <div className="text-sm text-gray-400 mt-4 text-center">
+                <p>Green = correct position, Yellow = wrong position, Gray = not in word</p>
             </div>
         </div>
     );
