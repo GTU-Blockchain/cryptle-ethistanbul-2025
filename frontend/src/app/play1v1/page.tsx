@@ -186,7 +186,7 @@ export default function Play1v1Page() {
             }
 
             // Create match on contract
-            const createMatchTx = await createMatch(300, stakeAmount); // 5 minutes duration
+            const createMatchTx = await createMatch(60, stakeAmount); // 1 minute duration
             console.log("Match creation transaction:", createMatchTx);
 
             // Wait for the transaction to be mined and get the match ID from events
@@ -311,7 +311,7 @@ export default function Play1v1Page() {
                                     Neither player solved the word in time
                                 </p>
                                 <p className="text-yellow-300 text-sm">
-                                    Both players got their stakes back
+                                    Both players get their stakes back
                                 </p>
                             </div>
                         ) : matchResult?.winner ? (
@@ -331,6 +331,9 @@ export default function Play1v1Page() {
                                               1e18
                                           ).toFixed(3)} ETH`
                                         : "N/A"}
+                                </p>
+                                <p className="text-slate-400 text-xs mt-1">
+                                    (Total stakes from both players)
                                 </p>
                             </div>
                         ) : (
@@ -391,11 +394,11 @@ export default function Play1v1Page() {
                 </div>
 
                 <div className="mb-6">
-                    <p className="text-slate-300 mb-2">Rules:</p>
+                    <p className="text-slate-300 mb-2">Prize Structure:</p>
                     <ul className="text-sm text-slate-400 space-y-1">
-                        <li>• Both players guess the same word</li>
-                        <li>• First to solve wins all stakes</li>
-                        <li>• 5 minute time limit</li>
+                        <li>• Win: Get all stakes (both players)</li>
+                        <li>• Lose: Lose your stake</li>
+                        <li>• 1 minute time limit</li>
                         <li>• 6 guesses maximum</li>
                     </ul>
                 </div>

@@ -34,6 +34,7 @@ contract SimpleWordle {
         uint32 duration; // seconds
         bool resolved;
         bool won;
+        uint256 stake; // stake amount for singleplayer
     }
 
     struct Match {
@@ -58,7 +59,8 @@ contract SimpleWordle {
     event GameCreated(
         uint256 indexed id,
         address indexed player,
-        uint32 duration
+        uint32 duration,
+        uint256 stake
     );
     event WordSeeded(uint256 indexed id, bytes32 wordHash);
     event GuessSubmitted(
@@ -106,14 +108,20 @@ contract SimpleWordle {
      * Player creates a game; starts immediately with a duration.
      * The backend/oracle should seed the word hash shortly after with seedWordHash().
      */
-    function createGame(uint32 durationSeconds) external returns (uint256 id) {
+    function createGame(
+        uint32 durationSeconds
+    ) external payable returns (uint256 id) {
+        require(msg.value > 0, "stake required");
+        require(msg.value >= 0.001 ether, "minimum stake 0.001 ETH");
+
         id = nextGameId++;
         Game storage g = games[id];
         g.player = msg.sender;
         g.startTime = uint40(block.timestamp);
-        g.duration = durationSeconds == 0 ? 300 : durationSeconds; // default 5 mins
+        g.duration = durationSeconds == 0 ? 60 : durationSeconds; // default 5 mins
+        g.stake = msg.value;
 
-        emit GameCreated(id, msg.sender, g.duration);
+        emit GameCreated(id, msg.sender, g.duration, g.stake);
     }
 
     /**
@@ -153,6 +161,12 @@ contract SimpleWordle {
         if (correct) {
             g.resolved = true;
             g.won = true;
+
+            // Winner gets stake back + 50% bonus
+            uint256 bonus = g.stake / 2; // 50% bonus
+            uint256 totalPrize = g.stake + bonus;
+            payable(msg.sender).transfer(totalPrize);
+
             emit GameResolved(id, true, g.guesses);
             return;
         }
@@ -164,6 +178,7 @@ contract SimpleWordle {
         ) {
             g.resolved = true;
             g.won = false;
+            // Loser loses their stake (no transfer needed, stake stays in contract)
             emit GameResolved(id, false, g.guesses);
         }
     }
@@ -269,13 +284,13 @@ contract SimpleWordle {
             m.resolved = true;
             m.winner = msg.sender;
 
-            // Transfer all stakes to winner
+            // Winner gets total stake (player1 + player2 stakes)
             payable(msg.sender).transfer(m.stake);
 
             emit MatchResolved(
                 id,
                 msg.sender,
-                m.stake,
+                m.stake, // total stake amount
                 isPlayer1 ? m.player1Guesses : m.player2Guesses
             );
             return;
@@ -297,7 +312,11 @@ contract SimpleWordle {
         }
     }
 
-    // --- View helpers for matches ---
+    // --- View helpers ---
+    function getGame(uint256 id) external view returns (Game memory) {
+        return games[id];
+    }
+
     function getMatch(uint256 id) external view returns (Match memory) {
         return matches[id];
     }
@@ -312,41 +331,61 @@ contract SimpleWordle {
     function createGameForPlayer(
         address player,
         uint32 durationSeconds
-    ) external returns (uint256 id) {
+    ) external payable returns (uint256 id) {
+        require(msg.value > 0, "stake required");
+        require(msg.value >= 0.001 ether, "minimum stake 0.001 ETH");
+
         id = nextGameId++;
         Game storage g = games[id];
         g.player = player;
         g.startTime = uint40(block.timestamp);
-        g.duration = durationSeconds == 0 ? 300 : durationSeconds;
+        g.duration = durationSeconds == 0 ? 60 : durationSeconds;
+        g.stake = msg.value;
 
-        emit GameCreated(id, player, g.duration);
+        emit GameCreated(id, player, g.duration, g.stake);
     }
 
     function createGameWithWord(
         address player,
         uint32 durationSeconds,
         bytes32 wordHash
-    ) external returns (uint256 id) {
+    ) external payable returns (uint256 id) {
+        require(msg.value > 0, "stake required");
+        require(msg.value >= 0.001 ether, "minimum stake 0.001 ETH");
+
         id = nextGameId++;
         Game storage g = games[id];
         g.player = player;
         g.startTime = uint40(block.timestamp);
-        g.duration = durationSeconds == 0 ? 300 : durationSeconds;
+        g.duration = durationSeconds == 0 ? 60 : durationSeconds;
         g.wordHash = wordHash;
+        g.stake = msg.value;
 
-        emit GameCreated(id, player, g.duration);
+        emit GameCreated(id, player, g.duration, g.stake);
         emit WordSeeded(id, wordHash);
     }
 
     /**
      * Batch create multiple games (useful for testing)
+     * Each game gets equal stake from msg.value
      */
     function batchCreateGames(
         address[] calldata players,
         uint32 durationSeconds,
         bytes32[] calldata wordHashes
-    ) external returns (uint256[] memory gameIds) {
+    ) external payable returns (uint256[] memory gameIds) {
         require(players.length == wordHashes.length, "array length mismatch");
+        require(msg.value > 0, "stake required");
+        require(
+            msg.value >= 0.001 ether * players.length,
+            "minimum stake per game"
+        );
+
+        uint256 stakePerGame = msg.value / players.length;
+        require(
+            stakePerGame >= 0.001 ether,
+            "minimum stake 0.001 ETH per game"
+        );
 
         gameIds = new uint256[](players.length);
 
@@ -355,12 +394,13 @@ contract SimpleWordle {
             Game storage g = games[id];
             g.player = players[i];
             g.startTime = uint40(block.timestamp);
-            g.duration = durationSeconds == 0 ? 300 : durationSeconds;
+            g.duration = durationSeconds == 0 ? 60 : durationSeconds;
             g.wordHash = wordHashes[i];
+            g.stake = stakePerGame;
 
             gameIds[i] = id;
 
-            emit GameCreated(id, players[i], g.duration);
+            emit GameCreated(id, players[i], g.duration, g.stake);
             emit WordSeeded(id, wordHashes[i]);
         }
     }
