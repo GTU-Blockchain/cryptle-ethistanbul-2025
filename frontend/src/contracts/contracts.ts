@@ -3,10 +3,10 @@ import WordleABI from "./abi/SimpleWordle.json";
 
 export const contracts = {
     SimpleWordle: {
-        address: "0xAD73a6e6a6f740ECCC8801EC87bc1591d0627544" as const,
+        address: "0x918E6F1c285303C446F882189b05b24df6895ba9" as const,
         deploymentTxHash:
-            "0x155e99e652e8682eb484eae8bf66fcd46f7d3a2360f1195a9251d3549e8d28ee",
-        blockNumber: 22144040,
+            "0xd88c7ef8373b575c83b601129cf997f5d4fef2c285831d80aacfaad20903b51d",
+        blockNumber: 22146801,
         abi: WordleABI,
     },
 } as const;
@@ -30,5 +30,5 @@ export function getContractABI(name: ContractName) {
 
 // Re-export specific contract for convenience
 export const WORDLE_ADDRESS =
-    "0xAD73a6e6a6f740ECCC8801EC87bc1591d0627544" as const;
+    "0x918E6F1c285303C446F882189b05b24df6895ba9" as const;
 export const WORDLE_ABI = WordleABI;

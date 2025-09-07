@@ -118,7 +118,7 @@ contract SimpleWordle {
         Game storage g = games[id];
         g.player = msg.sender;
         g.startTime = uint40(block.timestamp);
-        g.duration = durationSeconds == 0 ? 60 : durationSeconds; // default 5 mins
+        g.duration = durationSeconds == 0 ? 300 : durationSeconds; // default 5 mins
         g.stake = msg.value;
 
         emit GameCreated(id, msg.sender, g.duration, g.stake);
@@ -339,7 +339,7 @@ contract SimpleWordle {
         Game storage g = games[id];
         g.player = player;
         g.startTime = uint40(block.timestamp);
-        g.duration = durationSeconds == 0 ? 60 : durationSeconds;
+        g.duration = durationSeconds == 0 ? 300 : durationSeconds;
         g.stake = msg.value;
 
         emit GameCreated(id, player, g.duration, g.stake);
@@ -357,7 +357,7 @@ contract SimpleWordle {
         Game storage g = games[id];
         g.player = player;
         g.startTime = uint40(block.timestamp);
-        g.duration = durationSeconds == 0 ? 60 : durationSeconds;
+        g.duration = durationSeconds == 0 ? 300 : durationSeconds;
         g.wordHash = wordHash;
         g.stake = msg.value;
 
@@ -394,7 +394,7 @@ contract SimpleWordle {
             Game storage g = games[id];
             g.player = players[i];
             g.startTime = uint40(block.timestamp);
-            g.duration = durationSeconds == 0 ? 60 : durationSeconds;
+            g.duration = durationSeconds == 0 ? 300 : durationSeconds;
             g.wordHash = wordHashes[i];
             g.stake = stakePerGame;
 
