@@ -40,7 +40,8 @@
         "shreds": "^0.2.1",
         "tailwind-merge": "^3.3.0",
         "viem": "^2.30.5",
-        "wagmi": "^2.16.9"
+        "wagmi": "^2.16.9",
+        "word-list": "^4.1.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",
