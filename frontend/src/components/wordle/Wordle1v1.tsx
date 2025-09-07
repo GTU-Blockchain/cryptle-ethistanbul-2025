@@ -1,17 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
-import { WalletSelector } from "../WalletSelector";
-import Link from "next/link";
 import { isValidWord } from "@/lib/words";
 import { Words } from "@/lib/word-list";
+import Confetti from "react-confetti";
 import { useWordleContract } from "@/hooks/wordle/useWordleContract";
 import { useWordleEvents } from "@/hooks/wordle/useWordleEvents";
 import { keccak256, toUtf8Bytes } from "ethers";
-import Confetti from "react-confetti";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
 
@@ -20,15 +17,26 @@ interface Letter {
     state: LetterState;
 }
 
-export function Wordle() {
+interface Wordle1v1Props {
+    matchId: string | null;
+    stakeAmount: string;
+}
+
+export function Wordle1v1({ matchId, stakeAmount }: Wordle1v1Props) {
     const { address, isConnected } = useAccount();
     const {
-        createGame,
-        seedWordHash,
-        submitGuess: submitGuessContract,
+        createMatch,
+        joinMatch,
+        seedMatchWord,
+        submitMatchGuess: submitMatchGuessContract,
+        getMatch,
     } = useWordleContract();
-    const { gamesCreated, wordsSeeded, guessesSubmitted, gamesResolved } =
-        useWordleEvents();
+    const {
+        matchesCreated,
+        matchesJoined,
+        matchGuessesSubmitted,
+        matchesResolved,
+    } = useWordleEvents();
 
     const [guesses, setGuesses] = useState<Letter[][]>([]);
     const [currentGuess, setCurrentGuess] = useState<string>("");
@@ -38,72 +46,113 @@ export function Wordle() {
     const [letterStates, setLetterStates] = useState<
         Record<string, LetterState>
     >({});
-    const [inputValue, setInputValue] = useState<string>("");
-    const [animatingRow, setAnimatingRow] = useState<number | null>(null);
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [showConfetti, setShowConfetti] = useState<boolean>(false);
-    const [gameId, setGameId] = useState<string | null>(null);
+    const [isPlayer1, setIsPlayer1] = useState<boolean>(false);
+    const [opponentGuesses, setOpponentGuesses] = useState<Letter[][]>([]);
+    const [matchData, setMatchData] = useState<any>(null);
 
     // Check wallet connection first
     if (!isConnected || !address) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-8">
-                <h1 className="text-4xl font-bold mb-8">CRYPTLE</h1>
+                <h1 className="text-4xl font-bold mb-8">CRYPTLE 1v1</h1>
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-bold mb-4 text-red-400">
                         Wallet Required
                     </h2>
                     <p className="text-gray-400 mb-6">
-                        Please connect your wallet to play CRYPTLE
+                        Please connect your wallet to play CRYPTLE 1v1
                     </p>
-                    <WalletSelector />
                 </div>
             </div>
         );
     }
 
-    // Initialize game
+    // Initialize match
     useEffect(() => {
-        const startNewGame = async () => {
+        const initializeMatch = async () => {
             try {
-                // Select random word
+                if (!matchId) return;
+
+                // Get match data
+                const match = await getMatch(parseInt(matchId));
+                setMatchData(match);
+
+                // Determine if player is player1 or player2
+                const isP1 =
+                    match.player1.toLowerCase() === address.toLowerCase();
+                setIsPlayer1(isP1);
+
+                // Select random word (same for both players)
                 const randomWord =
                     Words[Math.floor(Math.random() * Words.length)];
                 setTargetWord(randomWord);
-                console.log("Target word:", randomWord); // For debugging
+                console.log("Target word:", randomWord);
 
-                // Create game on contract
-                const createGameTx = await createGame();
-                console.log("Game created:", createGameTx);
-
-                // Wait for transaction to be mined and get game ID
-                // TODO: Get game ID from transaction receipt or event
-                // For now, we'll use a placeholder
-                const tempGameId = "1"; // This should come from the contract event
-                setGameId(tempGameId);
-
-                // Generate word hash and seed it
+                // Always seed the word hash to contract
                 const wordHash = keccak256(toUtf8Bytes(randomWord));
                 console.log("Word hash:", wordHash);
 
-                // Seed the word hash
-                const seedTx = await seedWordHash(
-                    parseInt(tempGameId),
-                    wordHash
-                );
-                console.log("Word seeded:", seedTx);
+                try {
+                    await seedMatchWord(parseInt(matchId), wordHash);
+                    console.log("Word seeded to contract");
+                } catch (seedError) {
+                    console.error("Error seeding word:", seedError);
+                    // Don't fail the whole initialization if seeding fails
+                }
             } catch (error) {
-                console.error("Error starting game:", error);
-                setErrorMessage("Failed to start game");
+                console.error("Error initializing match:", error);
+                setErrorMessage("Failed to initialize match");
                 setTimeout(() => setErrorMessage(""), 3000);
             }
         };
 
-        // Only start game when wallet is connected
-        if (isConnected && address) {
-            startNewGame();
+        if (isConnected && address && matchId) {
+            initializeMatch();
         }
-    }, [isConnected, address, createGame, seedWordHash]);
+    }, [isConnected, address, matchId, getMatch, seedMatchWord]);
+
+    // Listen for match events
+    useEffect(() => {
+        if (!matchId) return;
+
+        const matchIdStr = matchId;
+
+        // Listen for opponent guesses
+        const opponentGuesses = matchGuessesSubmitted.filter(
+            (event) =>
+                event.matchId === matchIdStr &&
+                event.player &&
+                typeof event.player === "string" &&
+                event.player.toLowerCase() !== address.toLowerCase()
+        );
+
+        if (opponentGuesses.length > 0) {
+            const latestOpponentGuess =
+                opponentGuesses[opponentGuesses.length - 1];
+            // Update opponent's guesses display
+            // TODO: Implement opponent guess display
+        }
+
+        // Listen for match resolution
+        const resolvedMatch = matchesResolved.find(
+            (event) => event.matchId === matchIdStr
+        );
+
+        if (resolvedMatch) {
+            setGameOver(true);
+            if (
+                resolvedMatch.winner &&
+                typeof resolvedMatch.winner === "string" &&
+                resolvedMatch.winner.toLowerCase() === address.toLowerCase()
+            ) {
+                setGameWon(true);
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 5000);
+            }
+        }
+    }, [matchId, matchGuessesSubmitted, matchesResolved, address]);
 
     const getLetterState = (
         letter: string,
@@ -139,15 +188,13 @@ export function Wordle() {
     };
 
     const submitGuess = async () => {
-        // inputValue ile de submit edilebilsin
-        const guessToSubmit =
-            inputValue.length === 5 ? inputValue : currentGuess;
-        if (guessToSubmit.length !== 5 || guesses.length >= 6) return;
+        if (currentGuess.length !== 5 || guesses.length >= 6 || !matchId)
+            return;
 
         // Check if the word is valid
-        if (!isValidWord(guessToSubmit)) {
+        if (!isValidWord(currentGuess)) {
             setErrorMessage("Not a valid word!");
-            setTimeout(() => setErrorMessage(""), 2000); // Clear error after 2 seconds
+            setTimeout(() => setErrorMessage(""), 2000);
             return;
         }
 
@@ -156,14 +203,10 @@ export function Wordle() {
 
         try {
             // Submit guess to contract
-            const submitTx = await submitGuessContract(
-                parseInt(gameId || "0"),
-                guessToSubmit.toUpperCase()
+            await submitMatchGuessContract(
+                parseInt(matchId),
+                currentGuess.toUpperCase()
             );
-            console.log("Guess submitted:", submitTx);
-
-            // Wait for transaction to be mined
-            // TODO: Wait for transaction receipt and get result
         } catch (error) {
             console.error("Error submitting guess:", error);
             setErrorMessage("Failed to submit guess");
@@ -171,45 +214,30 @@ export function Wordle() {
             return;
         }
 
-        const newGuess: Letter[] = guessToSubmit
+        const newGuess: Letter[] = currentGuess
             .split("")
             .map((letter, index) => ({
                 letter: letter.toUpperCase(),
                 state: getLetterState(
                     letter.toUpperCase(),
                     index,
-                    guessToSubmit
+                    currentGuess
                 ),
             }));
 
-        setGuesses(prev => {
-            setAnimatingRow(prev.length); // yeni eklenen satırın index'i
-            return [...prev, newGuess];
-        });
+        setGuesses([...guesses, newGuess]);
         updateLetterStates(newGuess);
 
-        /*setTimeout(() => {
-            if (guessToSubmit.toUpperCase() === targetWord) {
-                setGameWon(true);
-                setGameOver(true);
-            } else if (guesses.length === 5) {
-                setGameOver(true);
-            }
-            setAnimatingRow(null);
-        }, 5 * 120); */// 5 harf * 120ms gecikme
-        
-        if (guessToSubmit.toUpperCase() === targetWord) {
+        if (currentGuess.toUpperCase() === targetWord) {
             setGameWon(true);
             setGameOver(true);
             setShowConfetti(true);
-            // Stop confetti after 5 seconds
             setTimeout(() => setShowConfetti(false), 5000);
         } else if (guesses.length === 5) {
             setGameOver(true);
         }
 
         setCurrentGuess("");
-        setInputValue("");
     };
 
     const handleKeyPress = (key: string) => {
@@ -241,33 +269,17 @@ export function Wordle() {
         const rows = [];
         // Render completed guesses
         for (let i = 0; i < guesses.length; i++) {
-            const isAnimating = i === animatingRow;
             rows.push(
                 <div key={i} className="flex gap-2">
                     {guesses[i].map((letter, j) => (
-                        isAnimating ? (
-                            <motion.div
-                                key={j}
-                                initial={{ opacity: 0, scale: 0.7 }}
-                                animate={{ opacity: 1, scale: 1.1 }}
-                                transition={{ delay: j * 0.12, duration: 0.32, type: "spring" }}
-                                className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
-                                    letter.state
-                                )}`}
-                                style={{ willChange: "opacity, transform" }}
-                            >
-                                {letter.letter}
-                            </motion.div>
-                        ) : (
-                            <div
-                                key={j}
-                                className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
-                                    letter.state
-                                )}`}
-                            >
-                                {letter.letter}
-                            </div>
-                        )
+                        <div
+                            key={j}
+                            className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
+                                letter.state
+                            )}`}
+                        >
+                            {letter.letter}
+                        </div>
                     ))}
                 </div>
             );
@@ -322,11 +334,33 @@ export function Wordle() {
             )}
 
             <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center">
-                Word of the Day
+                CRYPTLE 1v1 ⚔️
             </h1>
-            <p className="text-slate-300 text-lg mb-8 text-center">
-                Guess the hidden word in 6 tries.
+            <p className="text-slate-300 text-lg mb-4 text-center">
+                First to solve wins {stakeAmount} ETH!
             </p>
+
+            {/* Match Info */}
+            <div className="bg-[#232b39] p-4 rounded-lg mb-6">
+                <div className="flex gap-8 text-sm">
+                    <div>
+                        <span className="text-slate-400">Match ID:</span>
+                        <span className="ml-2 font-mono">#{matchId}</span>
+                    </div>
+                    <div>
+                        <span className="text-slate-400">Stake:</span>
+                        <span className="ml-2 text-emerald-400 font-bold">
+                            {stakeAmount} ETH
+                        </span>
+                    </div>
+                    <div>
+                        <span className="text-slate-400">You are:</span>
+                        <span className="ml-2 text-blue-400 font-bold">
+                            {isPlayer1 ? "Player 1" : "Player 2"}
+                        </span>
+                    </div>
+                </div>
+            </div>
 
             {/* Error message */}
             {errorMessage && (
@@ -341,27 +375,21 @@ export function Wordle() {
             {gameOver && gameWon && (
                 <div className="text-center mb-8">
                     <p className="text-emerald-400 text-2xl font-bold mb-2">
-                        🎉 Congratulations! You won!
+                        🎉 You Won! 🎉
                     </p>
-                    <p className="text-slate-300 text-lg">
-                        The word was:{" "}
-                        <span className="font-bold text-emerald-300">
-                            {targetWord}
-                        </span>
+                    <p className="text-yellow-400 text-lg">
+                        You won {stakeAmount} ETH!
                     </p>
                 </div>
-            )}*/
+            )}
 
             {gameOver && !gameWon && (
                 <div className="text-center mb-8">
                     <p className="text-red-400 text-2xl font-bold mb-2">
-                        😔 You lose!
+                        😔 You Lost!
                     </p>
                     <p className="text-slate-300 text-lg">
-                        The word was:{" "}
-                        <span className="font-bold text-red-300">
-                            {targetWord}
-                        </span>
+                        Better luck next time!
                     </p>
                 </div>
             )}
