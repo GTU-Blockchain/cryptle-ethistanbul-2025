@@ -43,6 +43,7 @@ export function Wordle() {
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [showConfetti, setShowConfetti] = useState<boolean>(false);
     const [gameId, setGameId] = useState<string | null>(null);
+    const [wordSeeded, setWordSeeded] = useState<boolean>(false);
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -62,10 +63,39 @@ export function Wordle() {
         );
     }
 
+    // Listen for game created events to get the real game ID
+    useEffect(() => {
+        if (!isConnected || !address) return;
+
+        if (gamesCreated.length > 0) {
+            // Get the most recent game created by this player
+            const latestGame = gamesCreated
+                .filter(
+                    (game) =>
+                        game.player &&
+                        typeof game.player === "string" &&
+                        game.player.toLowerCase() === address?.toLowerCase()
+                )
+                .sort((a, b) => {
+                    const aBlock = Number(a.blockNumber) || 0;
+                    const bBlock = Number(b.blockNumber) || 0;
+                    return bBlock - aBlock;
+                })[0];
+
+            if (latestGame && latestGame.gameId !== gameId) {
+                console.log("New game ID received:", latestGame.gameId);
+                setGameId(latestGame.gameId);
+            }
+        }
+    }, [gamesCreated, address, gameId, isConnected]);
+
     // Initialize game
     useEffect(() => {
         const startNewGame = async () => {
             try {
+                // Reset word seeded state for new game
+                setWordSeeded(false);
+
                 // Select random word
                 const randomWord =
                     Words[Math.floor(Math.random() * Words.length)];
@@ -76,22 +106,7 @@ export function Wordle() {
                 const createGameTx = await createGame();
                 console.log("Game created:", createGameTx);
 
-                // Wait for transaction to be mined and get game ID
-                // TODO: Get game ID from transaction receipt or event
-                // For now, we'll use a placeholder
-                const tempGameId = "1"; // This should come from the contract event
-                setGameId(tempGameId);
-
-                // Generate word hash and seed it
-                const wordHash = keccak256(toUtf8Bytes(randomWord));
-                console.log("Word hash:", wordHash);
-
-                // Seed the word hash
-                const seedTx = await seedWordHash(
-                    parseInt(tempGameId),
-                    wordHash
-                );
-                console.log("Word seeded:", seedTx);
+                // Game ID will be set by the event listener above
             } catch (error) {
                 console.error("Error starting game:", error);
                 setErrorMessage("Failed to start game");
@@ -103,7 +118,36 @@ export function Wordle() {
         if (isConnected && address) {
             startNewGame();
         }
-    }, [isConnected, address, createGame, seedWordHash]);
+    }, [isConnected, address, createGame]);
+
+    // Seed word hash when game ID is available
+    useEffect(() => {
+        if (!isConnected || !address) return;
+
+        const seedWord = async () => {
+            if (gameId && targetWord && !wordSeeded) {
+                try {
+                    // Generate word hash and seed it
+                    const wordHash = keccak256(toUtf8Bytes(targetWord));
+                    console.log("Word hash:", wordHash);
+
+                    // Seed the word hash
+                    const seedTx = await seedWordHash(
+                        parseInt(gameId),
+                        wordHash
+                    );
+                    console.log("Word seeded:", seedTx);
+                    setWordSeeded(true);
+                } catch (error) {
+                    console.error("Error seeding word:", error);
+                    setErrorMessage("Failed to seed word");
+                    setTimeout(() => setErrorMessage(""), 3000);
+                }
+            }
+        };
+
+        seedWord();
+    }, [gameId, targetWord, wordSeeded, seedWordHash, isConnected, address]);
 
     const getLetterState = (
         letter: string,
@@ -139,10 +183,24 @@ export function Wordle() {
     };
 
     const submitGuess = async () => {
+        // Check wallet connection first
+        if (!isConnected || !address) {
+            setErrorMessage("Wallet not connected!");
+            setTimeout(() => setErrorMessage(""), 2000);
+            return;
+        }
+
         // inputValue ile de submit edilebilsin
         const guessToSubmit =
             inputValue.length === 5 ? inputValue : currentGuess;
         if (guessToSubmit.length !== 5 || guesses.length >= 6) return;
+
+        // Check if we have a valid game ID
+        if (!gameId || gameId === "0") {
+            setErrorMessage("Game not ready yet. Please wait...");
+            setTimeout(() => setErrorMessage(""), 2000);
+            return;
+        }
 
         // Check if the word is valid
         if (!isValidWord(guessToSubmit)) {
@@ -157,7 +215,7 @@ export function Wordle() {
         try {
             // Submit guess to contract
             const submitTx = await submitGuessContract(
-                parseInt(gameId || "0"),
+                parseInt(gameId),
                 guessToSubmit.toUpperCase()
             );
             console.log("Guess submitted:", submitTx);
