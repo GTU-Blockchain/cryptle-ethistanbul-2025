@@ -1,8 +1,9 @@
 import { useCallback } from "react";
+import { parseEther } from "viem";
 import { createContractHook } from "../useContractFactory";
 
 // Create the base hook using the factory
-const useBaseWordle = createContractHook("SimpleWordle");
+const useBaseWordle = createContractHook("SimpleWordle", { isPayable: true });
 
 /**
  * Custom hook for SimpleWordle contract interactions
@@ -137,8 +138,10 @@ export function useWordleContract() {
     // Match write functions
     const createMatch = useCallback(
         async (durationSeconds: number = 300, stakeAmount: string) => {
+            // Convert ETH to Wei using viem's parseEther
+            const stakeInWei = parseEther(stakeAmount);
             return await write("createMatch", [durationSeconds], {
-                value: stakeAmount,
+                value: stakeInWei,
             });
         },
         [write]
@@ -146,8 +149,10 @@ export function useWordleContract() {
 
     const joinMatch = useCallback(
         async (matchId: number, stakeAmount: string) => {
+            // Convert ETH to Wei using viem's parseEther
+            const stakeInWei = parseEther(stakeAmount);
             return await write("joinMatch", [matchId], {
-                value: stakeAmount,
+                value: stakeInWei,
             });
         },
         [write]

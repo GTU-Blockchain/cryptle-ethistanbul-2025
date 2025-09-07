@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { WalletSelector } from "@/components/WalletSelector";
 import { Wordle1v1 } from "@/components/wordle/Wordle1v1";
 import { useWordleContract } from "@/hooks/wordle/useWordleContract";
@@ -9,9 +9,11 @@ import { useWordleEvents } from "@/hooks/wordle/useWordleEvents";
 import { keccak256, toUtf8Bytes } from "ethers";
 import { Words } from "@/lib/word-list";
 import { useSearchParams } from "next/navigation";
+import { parseEther, formatEther } from "viem";
 
 export default function Play1v1Page() {
     const { address, isConnected } = useAccount();
+    const { data: balance } = useBalance({ address });
     const { createMatch, joinMatch, seedMatchWord } = useWordleContract();
     const { matchesCreated, matchesJoined } = useWordleEvents();
     const searchParams = useSearchParams();
@@ -104,6 +106,21 @@ export default function Play1v1Page() {
 
         setIsCreating(true);
         try {
+            // Check balance before creating match
+            if (balance) {
+                const balanceInEth = parseFloat(formatEther(balance.value));
+                const stakeInEth = parseFloat(stakeAmount);
+                console.log(
+                    `Balance: ${balanceInEth} ETH, Stake: ${stakeInEth} ETH`
+                );
+
+                if (balanceInEth < stakeInEth) {
+                    console.error("Insufficient balance");
+                    setIsCreating(false);
+                    return;
+                }
+            }
+
             // Create match on contract
             const createMatchTx = await createMatch(300, stakeAmount); // 5 minutes duration
             console.log("Match creation transaction:", createMatchTx);
