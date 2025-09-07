@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useAccount } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
 import { WalletSelector } from "../WalletSelector";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { useWordleContract } from "@/hooks/wordle/useWordleContract";
 import { useWordleEvents } from "@/hooks/wordle/useWordleEvents";
 import { keccak256, toUtf8Bytes } from "ethers";
 import Confetti from "react-confetti";
+import { parseEther, formatEther } from "viem";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
 
@@ -22,6 +23,7 @@ interface Letter {
 
 export function Wordle() {
     const { address, isConnected } = useAccount();
+    const { data: balance } = useBalance({ address });
     const {
         createGame,
         seedWordHash,
@@ -44,6 +46,9 @@ export function Wordle() {
     const [showConfetti, setShowConfetti] = useState<boolean>(false);
     const [gameId, setGameId] = useState<string | null>(null);
     const [wordSeeded, setWordSeeded] = useState<boolean>(false);
+    const [stakeAmount, setStakeAmount] = useState<string>("0.001");
+    const [gameMode, setGameMode] = useState<"setup" | "playing">("setup");
+    const [isCreating, setIsCreating] = useState<boolean>(false);
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -85,40 +90,55 @@ export function Wordle() {
             if (latestGame && latestGame.gameId !== gameId) {
                 console.log("New game ID received:", latestGame.gameId);
                 setGameId(latestGame.gameId);
+                setGameMode("playing");
+                setIsCreating(false);
             }
         }
     }, [gamesCreated, address, gameId, isConnected]);
 
-    // Initialize game
-    useEffect(() => {
-        const startNewGame = async () => {
-            try {
-                // Reset word seeded state for new game
-                setWordSeeded(false);
+    // Handle game creation
+    const handleCreateGame = async () => {
+        if (isCreating) return;
 
-                // Select random word
-                const randomWord =
-                    Words[Math.floor(Math.random() * Words.length)];
-                setTargetWord(randomWord);
-                console.log("Target word:", randomWord); // For debugging
+        setIsCreating(true);
+        try {
+            // Check balance before creating game
+            if (balance) {
+                const balanceInEth = parseFloat(formatEther(balance.value));
+                const stakeInEth = parseFloat(stakeAmount);
+                console.log(
+                    `Balance: ${balanceInEth} ETH, Stake: ${stakeInEth} ETH`
+                );
 
-                // Create game on contract
-                const createGameTx = await createGame();
-                console.log("Game created:", createGameTx);
-
-                // Game ID will be set by the event listener above
-            } catch (error) {
-                console.error("Error starting game:", error);
-                setErrorMessage("Failed to start game");
-                setTimeout(() => setErrorMessage(""), 3000);
+                if (balanceInEth < stakeInEth) {
+                    console.error("Insufficient balance");
+                    setErrorMessage("Insufficient balance for stake");
+                    setTimeout(() => setErrorMessage(""), 3000);
+                    setIsCreating(false);
+                    return;
+                }
             }
-        };
 
-        // Only start game when wallet is connected
-        if (isConnected && address) {
-            startNewGame();
+            // Reset word seeded state for new game
+            setWordSeeded(false);
+
+            // Select random word
+            const randomWord = Words[Math.floor(Math.random() * Words.length)];
+            setTargetWord(randomWord);
+            console.log("Target word:", randomWord); // For debugging
+
+            // Create game on contract with stake
+            const createGameTx = await createGame(300, stakeAmount); // 5 minutes duration
+            console.log("Game created:", createGameTx);
+
+            // Game ID will be set by the event listener above
+        } catch (error) {
+            console.error("Error starting game:", error);
+            setErrorMessage("Failed to start game");
+            setTimeout(() => setErrorMessage(""), 3000);
+            setIsCreating(false);
         }
-    }, [isConnected, address, createGame]);
+    };
 
     // Seed word hash when game ID is available
     useEffect(() => {
@@ -148,6 +168,26 @@ export function Wordle() {
 
         seedWord();
     }, [gameId, targetWord, wordSeeded, seedWordHash, isConnected, address]);
+
+    // Listen for game resolution events
+    useEffect(() => {
+        if (!gameId) return;
+
+        const resolvedGame = gamesResolved.find(
+            (event) => event.gameId === gameId
+        );
+
+        if (resolvedGame) {
+            setGameOver(true);
+            if (resolvedGame.won) {
+                setGameWon(true);
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 5000);
+            } else {
+                setGameWon(false);
+            }
+        }
+    }, [gameId, gamesResolved]);
 
     const getLetterState = (
         letter: string,
@@ -366,6 +406,77 @@ export function Wordle() {
         return rows;
     };
 
+    // Show setup mode if not playing yet
+    if (gameMode === "setup") {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#151a23] text-white p-8">
+                <h1 className="text-4xl font-bold mb-8">CRYPTLE</h1>
+
+                <div className="bg-[#232b39] p-8 rounded-2xl max-w-md w-full">
+                    <h2 className="text-2xl font-bold mb-6 text-center">
+                        Start New Game 🎮
+                    </h2>
+
+                    <div className="mb-6">
+                        <label className="block text-slate-300 mb-2">
+                            Stake Amount (ETH)
+                        </label>
+                        <input
+                            type="number"
+                            step="0.001"
+                            min="0.001"
+                            value={stakeAmount}
+                            onChange={(e) => setStakeAmount(e.target.value)}
+                            className="w-full bg-gray-800 p-3 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            placeholder="0.001"
+                        />
+                        <p className="text-sm text-slate-400 mt-1">
+                            Minimum: 0.001 ETH
+                        </p>
+                        {balance && (
+                            <p className="text-sm text-slate-400 mt-1">
+                                Balance: {formatEther(balance.value)} ETH
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="mb-6">
+                        <p className="text-slate-300 mb-2">Prize Structure:</p>
+                        <ul className="text-sm text-slate-400 space-y-1">
+                            <li>• Win: Get stake back + 50% bonus</li>
+                            <li>• Lose: Lose your stake</li>
+                            <li>• 5 minute time limit</li>
+                            <li>• 6 guesses maximum</li>
+                        </ul>
+                    </div>
+
+                    {/* Error message */}
+                    {errorMessage && (
+                        <div className="mb-4 px-4 py-2 bg-red-600 text-white rounded-lg text-center font-semibold">
+                            {errorMessage}
+                        </div>
+                    )}
+
+                    <button
+                        onClick={handleCreateGame}
+                        disabled={
+                            isCreating ||
+                            parseFloat(stakeAmount) < 0.001 ||
+                            (balance &&
+                                parseFloat(formatEther(balance.value)) <
+                                    parseFloat(stakeAmount))
+                        }
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
+                    >
+                        {isCreating
+                            ? "Creating Game..."
+                            : `Start Game & Stake ${stakeAmount} ETH`}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#151a23] text-white px-4 py-8">
             {/* Confetti Animation */}
@@ -385,6 +496,10 @@ export function Wordle() {
             <p className="text-slate-300 text-lg mb-8 text-center">
                 Guess the hidden word in 6 tries.
             </p>
+            <p className="text-emerald-400 text-lg mb-4 text-center">
+                Stake: {stakeAmount} ETH | Prize:{" "}
+                {(parseFloat(stakeAmount) * 1.5).toFixed(3)} ETH
+            </p>
 
             {/* Error message */}
             {errorMessage && (
@@ -401,11 +516,18 @@ export function Wordle() {
                     <p className="text-emerald-400 text-2xl font-bold mb-2">
                         🎉 Congratulations! You won!
                     </p>
-                    <p className="text-slate-300 text-lg">
+                    <p className="text-slate-300 text-lg mb-2">
                         The word was:{" "}
                         <span className="font-bold text-emerald-300">
                             {targetWord}
                         </span>
+                    </p>
+                    <p className="text-yellow-400 text-lg font-bold">
+                        You won {(parseFloat(stakeAmount) * 1.5).toFixed(3)}{" "}
+                        ETH!
+                    </p>
+                    <p className="text-slate-400 text-sm">
+                        (Your stake: {stakeAmount} ETH + 50% bonus)
                     </p>
                 </div>
             )}*/
@@ -413,13 +535,16 @@ export function Wordle() {
             {gameOver && !gameWon && (
                 <div className="text-center mb-8">
                     <p className="text-red-400 text-2xl font-bold mb-2">
-                        😔 You lose!
+                        😔 You Lost!
                     </p>
-                    <p className="text-slate-300 text-lg">
+                    <p className="text-slate-300 text-lg mb-2">
                         The word was:{" "}
                         <span className="font-bold text-red-300">
                             {targetWord}
                         </span>
+                    </p>
+                    <p className="text-red-300 text-sm">
+                        You lost your stake of {stakeAmount} ETH
                     </p>
                 </div>
             )}

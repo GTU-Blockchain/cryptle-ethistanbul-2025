@@ -79,8 +79,12 @@ export function useWordleContract() {
 
     // Write functions with proper typing
     const createGame = useCallback(
-        async (durationSeconds: number = 60) => {
-            return await write("createGame", [durationSeconds]);
+        async (durationSeconds: number = 60, stakeAmount: string = "0.001") => {
+            // Convert ETH to Wei using viem's parseEther
+            const stakeInWei = parseEther(stakeAmount);
+            return await write("createGame", [durationSeconds], {
+                value: stakeInWei,
+            });
         },
         [write]
     );

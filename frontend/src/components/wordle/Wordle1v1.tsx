@@ -51,6 +51,7 @@ export function Wordle1v1({ matchId, stakeAmount }: Wordle1v1Props) {
     const [isPlayer1, setIsPlayer1] = useState<boolean>(false);
     const [opponentGuesses, setOpponentGuesses] = useState<Letter[][]>([]);
     const [matchData, setMatchData] = useState<any>(null);
+    const [wordSeeded, setWordSeeded] = useState<boolean>(false);
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -90,16 +91,19 @@ export function Wordle1v1({ matchId, stakeAmount }: Wordle1v1Props) {
                 setTargetWord(randomWord);
                 console.log("Target word:", randomWord);
 
-                // Always seed the word hash to contract
-                const wordHash = keccak256(toUtf8Bytes(randomWord));
-                console.log("Word hash:", wordHash);
+                // Only seed if not already seeded
+                if (!wordSeeded) {
+                    const wordHash = keccak256(toUtf8Bytes(randomWord));
+                    console.log("Word hash:", wordHash);
 
-                try {
-                    await seedMatchWord(parseInt(matchId), wordHash);
-                    console.log("Word seeded to contract");
-                } catch (seedError) {
-                    console.error("Error seeding word:", seedError);
-                    // Don't fail the whole initialization if seeding fails
+                    try {
+                        await seedMatchWord(parseInt(matchId), wordHash);
+                        console.log("Word seeded to contract");
+                        setWordSeeded(true);
+                    } catch (seedError) {
+                        console.error("Error seeding word:", seedError);
+                        // Don't fail the whole initialization if seeding fails
+                    }
                 }
             } catch (error) {
                 console.error("Error initializing match:", error);
@@ -111,7 +115,7 @@ export function Wordle1v1({ matchId, stakeAmount }: Wordle1v1Props) {
         if (isConnected && address && matchId) {
             initializeMatch();
         }
-    }, [isConnected, address, matchId, getMatch, seedMatchWord]);
+    }, [isConnected, address, matchId, getMatch, seedMatchWord, wordSeeded]);
 
     // Listen for match events
     useEffect(() => {
