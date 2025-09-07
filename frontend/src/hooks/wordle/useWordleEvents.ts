@@ -67,6 +67,7 @@ export function useWordleEvents() {
             gameId: event.args?.id?.toString() || "0",
             player: event.args?.player || "",
             duration: event.args?.duration?.toString() || "0",
+            stake: event.args?.stake?.toString() || "0",
             txHash: event.transactionHash || "",
             timestamp: event.timestamp || new Date(),
             blockNumber: event.blockNumber,

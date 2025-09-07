@@ -12,19 +12,14 @@ import { motion } from "framer-motion";
 export default function Home() {
     // Random word boxes for background
     const renderBackgroundWordBoxes = () => {
-        const words: string[] = [
-            "RISE",
-            "WEB3",
-            "DApp",
-            "Crypto"
-        ];
+        const words: string[] = ["RISE", "WEB3", "DApp", "Crypto"];
         return (
             <div className="pointer-events-none select-none absolute inset-0 z-0">
                 {words.map((word: string, idx: number) => {
                     const left = Math.random() * 80;
                     const top = Math.random() * 80;
                     const size = 38 + Math.random() * 32;
-                    const opacity = 0.08 + Math.random() * 0.10;
+                    const opacity = 0.08 + Math.random() * 0.1;
                     return (
                         <div
                             key={word + idx}
@@ -57,7 +52,8 @@ export default function Home() {
         return (
             <div className="pointer-events-none select-none absolute inset-0 z-0">
                 {[...Array(80)].map((_, i) => {
-                    const letter = letters[Math.floor(Math.random() * letters.length)];
+                    const letter =
+                        letters[Math.floor(Math.random() * letters.length)];
                     const left = Math.random() * 100;
                     const top = Math.random() * 100;
                     const size = 32 + Math.random() * 80;
@@ -71,7 +67,7 @@ export default function Home() {
                                 top: `${top}%`,
                                 fontSize: size,
                                 opacity,
-                                transform: `rotate(${rotate}deg)`
+                                transform: `rotate(${rotate}deg)`,
                             }}
                             className="absolute font-extrabold text-slate-200/20"
                         >
@@ -166,19 +162,47 @@ export default function Home() {
                     >
                         {isConnected && address ? (
                             <div className="flex flex-col items-center">
-                                <Button
-                                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-12 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
-                                    onClick={() => setShowStartAnim(true)}
-                                    disabled={showStartAnim}
-                                >
-                                    Start Playing
-                                </Button>
+                                <div className="flex gap-4">
+                                    <motion.div
+                                        whileHover={{ scale: 1.05, y: -4 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 300,
+                                        }}
+                                    >
+                                        <Button
+                                            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-10 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-2xl"
+                                            onClick={() =>
+                                                setShowStartAnim(true)
+                                            }
+                                            disabled={showStartAnim}
+                                        >
+                                            Solo
+                                        </Button>
+                                    </motion.div>
+                                    <motion.div
+                                        whileHover={{ scale: 1.05, y: -4 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 300,
+                                        }}
+                                    >
+                                        <Button
+                                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-10 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-2xl"
+                                            onClick={() =>
+                                                router.push("/play1v1")
+                                            }
+                                        >
+                                            1v1
+                                        </Button>
+                                    </motion.div>
+                                </div>
                                 <AnimatedStartBoxes
                                     show={showStartAnim}
                                     onAnimationComplete={() => {
-                                        setTimeout(() => {
-                                            router.push("/play");
-                                        }, 300);
+                                        router.push("/play");
                                     }}
                                 />
                             </div>
@@ -465,22 +489,38 @@ export default function Home() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => scrollToStep(0)}
-                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 0 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
+                                className={`w-3 h-3 rounded-full transition-all ${
+                                    currentStep === 0
+                                        ? "bg-cyan-500"
+                                        : "bg-slate-600 hover:bg-slate-500"
+                                }`}
                                 id="dot-0"
                             ></button>
                             <button
                                 onClick={() => scrollToStep(1)}
-                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 1 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
+                                className={`w-3 h-3 rounded-full transition-all ${
+                                    currentStep === 1
+                                        ? "bg-cyan-500"
+                                        : "bg-slate-600 hover:bg-slate-500"
+                                }`}
                                 id="dot-1"
                             ></button>
                             <button
                                 onClick={() => scrollToStep(2)}
-                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 2 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
+                                className={`w-3 h-3 rounded-full transition-all ${
+                                    currentStep === 2
+                                        ? "bg-cyan-500"
+                                        : "bg-slate-600 hover:bg-slate-500"
+                                }`}
                                 id="dot-2"
                             ></button>
                             <button
                                 onClick={() => scrollToStep(3)}
-                                className={`w-3 h-3 rounded-full transition-all ${currentStep === 3 ? "bg-cyan-500" : "bg-slate-600 hover:bg-slate-500"}`}
+                                className={`w-3 h-3 rounded-full transition-all ${
+                                    currentStep === 3
+                                        ? "bg-cyan-500"
+                                        : "bg-slate-600 hover:bg-slate-500"
+                                }`}
                                 id="dot-3"
                             ></button>
                         </div>

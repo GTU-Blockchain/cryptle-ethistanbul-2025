@@ -49,6 +49,8 @@ export function Wordle() {
     const [stakeAmount, setStakeAmount] = useState<string>("0.001");
     const [gameMode, setGameMode] = useState<"setup" | "playing">("setup");
     const [isCreating, setIsCreating] = useState<boolean>(false);
+    const [timeLeft, setTimeLeft] = useState<number>(60);
+    const [gameStartTime, setGameStartTime] = useState<number | null>(null);
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -88,13 +90,36 @@ export function Wordle() {
                 })[0];
 
             if (latestGame && latestGame.gameId !== gameId) {
-                console.log("New game ID received:", latestGame.gameId);
                 setGameId(latestGame.gameId);
                 setGameMode("playing");
+                setGameStartTime(Date.now());
+                setTimeLeft(60);
                 setIsCreating(false);
             }
         }
-    }, [gamesCreated, address, gameId, isConnected]);
+    }, [gamesCreated, address, gameId, isConnected, gameMode]);
+
+    // Timer effect
+    useEffect(() => {
+        if (gameMode === "playing" && gameStartTime && timeLeft > 0) {
+            const timer = setInterval(() => {
+                const now = Date.now();
+                const elapsed = Math.floor((now - gameStartTime) / 1000);
+                const remaining = Math.max(0, 60 - elapsed);
+
+                setTimeLeft(remaining);
+
+                if (remaining === 0) {
+                    // Time's up - end the game
+                    setGameOver(true);
+                    setGameWon(false);
+                    clearInterval(timer);
+                }
+            }, 1000);
+
+            return () => clearInterval(timer);
+        }
+    }, [gameMode, gameStartTime, timeLeft]);
 
     // Handle game creation
     const handleCreateGame = async () => {
@@ -128,8 +153,25 @@ export function Wordle() {
             console.log("Target word:", randomWord); // For debugging
 
             // Create game on contract with stake
-            const createGameTx = await createGame(300, stakeAmount); // 5 minutes duration
-            console.log("Game created:", createGameTx);
+            console.log("Creating game with stake:", stakeAmount);
+            const createGameTx = await createGame(60, stakeAmount); // 1 minute duration
+            console.log("Game created transaction:", createGameTx);
+            console.log("Waiting for GameCreated event...");
+
+            // Temporary: Set a dummy game ID to proceed
+            // This will be overridden when the real event comes
+            setTimeout(() => {
+                if (!gameId) {
+                    console.log(
+                        "No game ID received from events, using fallback"
+                    );
+                    setGameId("1"); // Temporary ID
+                    setGameMode("playing");
+                    setGameStartTime(Date.now());
+                    setTimeLeft(60);
+                    setIsCreating(false);
+                }
+            }, 3000); // Wait 3 seconds for event
 
             // Game ID will be set by the event listener above
         } catch (error) {
@@ -280,7 +322,7 @@ export function Wordle() {
                 ),
             }));
 
-        setGuesses(prev => {
+        setGuesses((prev) => {
             setAnimatingRow(prev.length); // yeni eklenen satırın index'i
             return [...prev, newGuess];
         });
@@ -294,8 +336,8 @@ export function Wordle() {
                 setGameOver(true);
             }
             setAnimatingRow(null);
-        }, 5 * 120); */// 5 harf * 120ms gecikme
-        
+        }, 5 * 120); */ // 5 harf * 120ms gecikme
+
         if (guessToSubmit.toUpperCase() === targetWord) {
             setGameWon(true);
             setGameOver(true);
@@ -342,13 +384,17 @@ export function Wordle() {
             const isAnimating = i === animatingRow;
             rows.push(
                 <div key={i} className="flex gap-2">
-                    {guesses[i].map((letter, j) => (
+                    {guesses[i].map((letter, j) =>
                         isAnimating ? (
                             <motion.div
                                 key={j}
                                 initial={{ opacity: 0, scale: 0.7 }}
                                 animate={{ opacity: 1, scale: 1.1 }}
-                                transition={{ delay: j * 0.12, duration: 0.32, type: "spring" }}
+                                transition={{
+                                    delay: j * 0.12,
+                                    duration: 0.32,
+                                    type: "spring",
+                                }}
                                 className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
                                     letter.state
                                 )}`}
@@ -366,7 +412,7 @@ export function Wordle() {
                                 {letter.letter}
                             </div>
                         )
-                    ))}
+                    )}
                 </div>
             );
         }
@@ -445,7 +491,7 @@ export function Wordle() {
                         <ul className="text-sm text-slate-400 space-y-1">
                             <li>• Win: Get stake back + 50% bonus</li>
                             <li>• Lose: Lose your stake</li>
-                            <li>• 5 minute time limit</li>
+                            <li>• 1 minute time limit</li>
                             <li>• 6 guesses maximum</li>
                         </ul>
                     </div>
@@ -489,7 +535,6 @@ export function Wordle() {
                     gravity={0.3}
                 />
             )}
-
             <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center">
                 Word of the Day
             </h1>
@@ -497,19 +542,25 @@ export function Wordle() {
                 Guess the hidden word in 6 tries.
             </p>
             <p className="text-emerald-400 text-lg mb-4 text-center">
-                Stake: {stakeAmount} ETH | Prize:{" "}
-                {(parseFloat(stakeAmount) * 1.5).toFixed(3)} ETH
+                Stake: {stakeAmount} ETH
             </p>
-
+            <div className="text-center mb-4">
+                <div
+                    className={`text-2xl font-bold ${
+                        timeLeft <= 10 ? "text-red-500" : "text-yellow-400"
+                    }`}
+                >
+                    ⏰ {timeLeft}s
+                </div>
+                <div className="text-sm text-slate-400">Time remaining</div>
+            </div>
             {/* Error message */}
             {errorMessage && (
                 <div className="mb-4 px-4 py-2 bg-red-600 text-white rounded-lg text-center font-semibold">
                     {errorMessage}
                 </div>
             )}
-
             <div className="mb-8">{renderGrid()}</div>
-
             {/* Game Over Messages */}
             {gameOver && gameWon && (
                 <div className="text-center mb-8">
@@ -530,12 +581,12 @@ export function Wordle() {
                         (Your stake: {stakeAmount} ETH + 50% bonus)
                     </p>
                 </div>
-            )}*/
-
+            )}
+            */
             {gameOver && !gameWon && (
                 <div className="text-center mb-8">
                     <p className="text-red-400 text-2xl font-bold mb-2">
-                        😔 You Lost!
+                        {timeLeft === 0 ? "⏰ Time's Up!" : "😔 You Lost!"}
                     </p>
                     <p className="text-slate-300 text-lg mb-2">
                         The word was:{" "}
@@ -544,18 +595,18 @@ export function Wordle() {
                         </span>
                     </p>
                     <p className="text-red-300 text-sm">
-                        You lost your stake of {stakeAmount} ETH
+                        {timeLeft === 0
+                            ? "Time ran out - you lost your stake"
+                            : `You lost your stake of ${stakeAmount} ETH`}
                     </p>
                 </div>
             )}
-
             <div className="mt-4">
                 <Keyboard
                     onKeyPress={handleKeyPress}
                     letterStates={letterStates}
                 />
             </div>
-
             <div className="text-sm text-gray-400 mt-4 text-center">
                 <p>
                     Green = correct position, Yellow = wrong position, Gray =
