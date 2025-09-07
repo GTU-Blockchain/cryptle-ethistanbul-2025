@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
 import { WalletSelector } from "../WalletSelector";
+import Confetti from "../Confetti";
+import Link from "next/link";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
 
@@ -23,6 +26,7 @@ export function Wordle() {
     const [gameWon, setGameWon] = useState<boolean>(false);
     const [letterStates, setLetterStates] = useState<Record<string, LetterState>>({});
     const [inputValue, setInputValue] = useState<string>("");
+    const [animatingRow, setAnimatingRow] = useState<number | null>(null);
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -98,15 +102,21 @@ export function Wordle() {
                 ),
             }));
 
-        setGuesses([...guesses, newGuess]);
+        setGuesses(prev => {
+            setAnimatingRow(prev.length); // yeni eklenen satırın index'i
+            return [...prev, newGuess];
+        });
         updateLetterStates(newGuess);
 
-        if (guessToSubmit.toUpperCase() === targetWord) {
-            setGameWon(true);
-            setGameOver(true);
-        } else if (guesses.length === 5) {
-            setGameOver(true);
-        }
+        setTimeout(() => {
+            if (guessToSubmit.toUpperCase() === targetWord) {
+                setGameWon(true);
+                setGameOver(true);
+            } else if (guesses.length === 5) {
+                setGameOver(true);
+            }
+            setAnimatingRow(null);
+        }, 5 * 120); // 5 harf * 120ms gecikme
 
         setCurrentGuess("");
         setInputValue("");
@@ -141,17 +151,33 @@ export function Wordle() {
         const rows = [];
         // Render completed guesses
         for (let i = 0; i < guesses.length; i++) {
+            const isAnimating = i === animatingRow;
             rows.push(
                 <div key={i} className="flex gap-2">
                     {guesses[i].map((letter, j) => (
-                        <div
-                            key={j}
-                            className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
-                                letter.state
-                            )}`}
-                        >
-                            {letter.letter}
-                        </div>
+                        isAnimating ? (
+                            <motion.div
+                                key={j}
+                                initial={{ opacity: 0, scale: 0.7 }}
+                                animate={{ opacity: 1, scale: 1.1 }}
+                                transition={{ delay: j * 0.12, duration: 0.32, type: "spring" }}
+                                className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
+                                    letter.state
+                                )}`}
+                                style={{ willChange: "opacity, transform" }}
+                            >
+                                {letter.letter}
+                            </motion.div>
+                        ) : (
+                            <div
+                                key={j}
+                                className={`w-16 h-16 flex items-center justify-center text-white font-bold text-2xl border-2 border-[#2c3443] ${getCellColor(
+                                    letter.state
+                                )}`}
+                            >
+                                {letter.letter}
+                            </div>
+                        )
                     ))}
                 </div>
             );
@@ -209,19 +235,57 @@ export function Wordle() {
             </div>
 
             {gameOver && (
-                <div className="text-center mb-8">
+                <div className="flex flex-col items-center justify-center mb-8">
                     {gameWon ? (
-                        <p className="text-green-500 text-xl font-bold">
-                            Congratulations! You won!
-                        </p>
+                        <>
+                            <Confetti />
+                            <motion.h2
+                                initial={{ scale: 0.7, opacity: 0 }}
+                                animate={{ scale: 1.2, opacity: 1 }}
+                                transition={{ type: "spring", duration: 0.7 }}
+                                className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400 drop-shadow-lg mb-4"
+                            >
+                                Congratulations!
+                            </motion.h2>
+                            <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3, duration: 0.5 }}
+                                className="text-xl text-slate-200 mb-6"
+                            >
+                                You found the word!
+                            </motion.p>
+                        </>
                     ) : (
-                        <p className="text-red-500 text-xl font-bold">
-                            Game Over! The word was: {" "}
-                            <span className="text-yellow-500">
-                                {targetWord}
-                            </span>
-                        </p>
+                        <>
+                            <motion.h2
+                                initial={{ scale: 0.7, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", duration: 0.7 }}
+                                className="text-4xl font-extrabold text-red-500 mb-4 drop-shadow-lg"
+                            >
+                                Game Over
+                            </motion.h2>
+                            <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3, duration: 0.5 }}
+                                className="text-lg text-slate-300 mb-2"
+                            >
+                                The word was: <span className="text-yellow-400 font-bold">{targetWord}</span>
+                            </motion.p>
+                        </>
                     )}
+                    <Link href="/leaderboard">
+                        <motion.button
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5, duration: 0.5 }}
+                            className="mt-6 px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg shadow-lg hover:scale-105 hover:from-cyan-400 hover:to-blue-500 transition"
+                        >
+                            View Leaderboard
+                        </motion.button>
+                    </Link>
                 </div>
             )}
 

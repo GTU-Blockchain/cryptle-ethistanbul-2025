@@ -50,5 +50,8 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.3"
   }
 }
