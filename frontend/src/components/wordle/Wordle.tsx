@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Keyboard } from "../keyboard/Keyboard";
 import { WalletSelector } from "../WalletSelector";
-import { isValidWord, getRandomTargetWord } from "@/lib/words";
+import { isValidWord } from "@/lib/words";
+import { Words } from "@/lib/word-list";
+import Confetti from "react-confetti";
 
 type LetterState = "correct" | "present" | "absent" | "empty" | "unused";
 
@@ -20,8 +22,12 @@ export function Wordle() {
     const [targetWord, setTargetWord] = useState<string>("");
     const [gameOver, setGameOver] = useState<boolean>(false);
     const [gameWon, setGameWon] = useState<boolean>(false);
-    const [letterStates, setLetterStates] = useState<Record<string, LetterState>>({});
+    const [letterStates, setLetterStates] = useState<
+        Record<string, LetterState>
+    >({});
     const [inputValue, setInputValue] = useState<string>("");
+    const [errorMessage, setErrorMessage] = useState<string>("");
+    const [showConfetti, setShowConfetti] = useState<boolean>(false);
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -43,7 +49,7 @@ export function Wordle() {
 
     // Initialize game
     useEffect(() => {
-        const randomWord = getRandomTargetWord();
+        const randomWord = Words[Math.floor(Math.random() * Words.length)];
         setTargetWord(randomWord);
         console.log("Target word:", randomWord); // For debugging
     }, []);
@@ -82,9 +88,10 @@ export function Wordle() {
     };
 
     const submitGuess = () => {
-    // inputValue ile de submit edilebilsin
-    const guessToSubmit = inputValue.length === 5 ? inputValue : currentGuess;
-    if (guessToSubmit.length !== 5 || guesses.length >= 6) return;
+        // inputValue ile de submit edilebilsin
+        const guessToSubmit =
+            inputValue.length === 5 ? inputValue : currentGuess;
+        if (guessToSubmit.length !== 5 || guesses.length >= 6) return;
 
         // Check if the word is valid
         if (!isValidWord(currentGuess)) {
@@ -113,6 +120,9 @@ export function Wordle() {
         if (guessToSubmit.toUpperCase() === targetWord) {
             setGameWon(true);
             setGameOver(true);
+            setShowConfetti(true);
+            // Stop confetti after 5 seconds
+            setTimeout(() => setShowConfetti(false), 5000);
         } else if (guesses.length === 5) {
             setGameOver(true);
         }
@@ -203,8 +213,23 @@ export function Wordle() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#151a23] text-white px-4 py-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center">Word of the Day</h1>
-            <p className="text-slate-300 text-lg mb-8 text-center">Guess the hidden word in 6 tries.</p>
+            {/* Confetti Animation */}
+            {showConfetti && (
+                <Confetti
+                    width={window.innerWidth}
+                    height={window.innerHeight}
+                    recycle={false}
+                    numberOfPieces={200}
+                    gravity={0.3}
+                />
+            )}
+
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center">
+                Word of the Day
+            </h1>
+            <p className="text-slate-300 text-lg mb-8 text-center">
+                Guess the hidden word in 6 tries.
+            </p>
 
             {/* Error message */}
             {errorMessage && (
@@ -215,20 +240,32 @@ export function Wordle() {
 
             <div className="mb-8">{renderGrid()}</div>
 
-            {gameOver && (
+            {/* Game Over Messages */}
+            {gameOver && gameWon && (
                 <div className="text-center mb-8">
-                    {gameWon ? (
-                        <p className="text-green-500 text-xl font-bold">
-                            Congratulations! You won!
-                        </p>
-                    ) : (
-                        <p className="text-red-500 text-xl font-bold">
-                            Game Over! The word was: {" "}
-                            <span className="text-yellow-500">
-                                {targetWord}
-                            </span>
-                        </p>
-                    )}
+                    <p className="text-emerald-400 text-2xl font-bold mb-2">
+                        🎉 Congratulations! You won!
+                    </p>
+                    <p className="text-slate-300 text-lg">
+                        The word was:{" "}
+                        <span className="font-bold text-emerald-300">
+                            {targetWord}
+                        </span>
+                    </p>
+                </div>
+            )}
+
+            {gameOver && !gameWon && (
+                <div className="text-center mb-8">
+                    <p className="text-red-400 text-2xl font-bold mb-2">
+                        😔 You lose!
+                    </p>
+                    <p className="text-slate-300 text-lg">
+                        The word was:{" "}
+                        <span className="font-bold text-red-300">
+                            {targetWord}
+                        </span>
+                    </p>
                 </div>
             )}
 
@@ -240,7 +277,10 @@ export function Wordle() {
             </div>
 
             <div className="text-sm text-gray-400 mt-4 text-center">
-                <p>Green = correct position, Yellow = wrong position, Gray = not in word</p>
+                <p>
+                    Green = correct position, Yellow = wrong position, Gray =
+                    not in word
+                </p>
             </div>
         </div>
     );
