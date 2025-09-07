@@ -14,19 +14,26 @@ import { parseEther, formatEther } from "viem";
 export default function Play1v1Page() {
     const { address, isConnected } = useAccount();
     const { data: balance } = useBalance({ address });
-    const { createMatch, joinMatch, seedMatchWord } = useWordleContract();
-    const { matchesCreated, matchesJoined } = useWordleEvents();
+    const { createMatch, joinMatch, seedMatchWord, getMatch } =
+        useWordleContract();
+    const { matchesCreated, matchesJoined, matchesResolved } =
+        useWordleEvents();
     const searchParams = useSearchParams();
     const joinMatchId = searchParams.get("join");
 
     const [stakeAmount, setStakeAmount] = useState<string>("0.001");
-    const [gameMode, setGameMode] = useState<"setup" | "waiting" | "playing">(
-        joinMatchId ? "setup" : "setup"
-    );
+    const [gameMode, setGameMode] = useState<
+        "setup" | "waiting" | "playing" | "finished"
+    >(joinMatchId ? "setup" : "setup");
     const [matchId, setMatchId] = useState<string | null>(joinMatchId);
     const [shareLink, setShareLink] = useState<string>("");
     const [isCreating, setIsCreating] = useState<boolean>(false);
     const [isJoining, setIsJoining] = useState<boolean>(false);
+    const [matchResult, setMatchResult] = useState<{
+        winner: string | null;
+        prize: string | null;
+        isDraw: boolean;
+    } | null>(null);
 
     // Listen for match creation events to get the actual match ID
     useEffect(() => {
@@ -60,28 +67,85 @@ export default function Play1v1Page() {
 
     // Listen for match join events
     useEffect(() => {
-        if (!address || !isJoining || !matchId) return;
+        if (!address || !matchId) return;
 
-        // Find the latest match joined by this address
-        const latestJoin = matchesJoined
-            .filter(
-                (join) =>
-                    join.matchId === matchId &&
-                    join.joiner &&
-                    typeof join.joiner === "string" &&
-                    join.joiner.toLowerCase() === address.toLowerCase()
-            )
-            .sort(
-                (a, b) =>
-                    new Date(b.timestamp).getTime() -
-                    new Date(a.timestamp).getTime()
-            )[0];
+        // Check if someone joined this match (either current user or opponent)
+        const matchJoined = matchesJoined.find(
+            (join) => join.matchId === matchId
+        );
 
-        if (latestJoin) {
-            setGameMode("playing");
-            setIsJoining(false);
+        if (matchJoined) {
+            // If current user joined (from join flow)
+            if (
+                isJoining &&
+                matchJoined.joiner &&
+                typeof matchJoined.joiner === "string" &&
+                matchJoined.joiner.toLowerCase() === address.toLowerCase()
+            ) {
+                setGameMode("playing");
+                setIsJoining(false);
+            }
+            // If opponent joined (from create flow)
+            else if (
+                gameMode === "waiting" &&
+                matchJoined.joiner &&
+                typeof matchJoined.joiner === "string" &&
+                matchJoined.joiner.toLowerCase() !== address.toLowerCase()
+            ) {
+                setGameMode("playing");
+            }
         }
-    }, [matchesJoined, address, isJoining, matchId]);
+    }, [matchesJoined, address, isJoining, matchId, gameMode]);
+
+    // Listen for match resolution events
+    useEffect(() => {
+        if (!matchId) return;
+
+        const resolvedMatch = matchesResolved.find(
+            (event) => event.matchId === matchId
+        );
+
+        if (resolvedMatch) {
+            setGameMode("finished");
+            setMatchResult({
+                winner: (resolvedMatch.winner as string) || null,
+                prize: resolvedMatch.prize?.toString() || null,
+                isDraw:
+                    resolvedMatch.winner ===
+                    "0x0000000000000000000000000000000000000000",
+            });
+        }
+    }, [matchId, matchesResolved]);
+
+    // Check match status directly from contract
+    useEffect(() => {
+        if (!matchId || !isConnected) return;
+
+        const checkMatchStatus = async () => {
+            try {
+                const matchData = await getMatch(parseInt(matchId));
+
+                if (matchData && matchData.resolved) {
+                    setGameMode("finished");
+                    setMatchResult({
+                        winner: matchData.winner || null,
+                        prize: matchData.stake
+                            ? (
+                                  parseFloat(matchData.stake.toString()) / 1e18
+                              ).toString()
+                            : null,
+                        isDraw:
+                            matchData.winner ===
+                            "0x0000000000000000000000000000000000000000",
+                    });
+                }
+            } catch (error) {
+                console.error("Error checking match status:", error);
+            }
+        };
+
+        checkMatchStatus();
+    }, [matchId, isConnected, getMatch]);
 
     // Check wallet connection first
     if (!isConnected || !address) {
@@ -211,6 +275,92 @@ export default function Play1v1Page() {
 
     if (gameMode === "playing") {
         return <Wordle1v1 matchId={matchId} stakeAmount={stakeAmount} />;
+    }
+
+    if (gameMode === "finished") {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#151a23] text-white p-8">
+                <h1 className="text-4xl font-bold mb-8">CRYPTLE 1v1</h1>
+
+                <div className="bg-[#232b39] p-8 rounded-2xl max-w-md w-full">
+                    <h2 className="text-2xl font-bold mb-6 text-center">
+                        🏁 Game Finished! 🏁
+                    </h2>
+
+                    <div className="mb-6">
+                        <p className="text-slate-300 mb-2">Match ID:</p>
+                        <p className="text-lg font-mono bg-gray-800 p-2 rounded">
+                            #{matchId}
+                        </p>
+                    </div>
+
+                    <div className="mb-6">
+                        <p className="text-slate-300 mb-2">Stake Amount:</p>
+                        <p className="text-2xl font-bold text-emerald-400">
+                            {stakeAmount} ETH
+                        </p>
+                    </div>
+
+                    <div className="text-center">
+                        {matchResult?.isDraw ? (
+                            <div>
+                                <p className="text-yellow-400 text-lg font-bold mb-2">
+                                    🤝 It's a Draw!
+                                </p>
+                                <p className="text-slate-300 text-sm mb-4">
+                                    Neither player solved the word in time
+                                </p>
+                                <p className="text-yellow-300 text-sm">
+                                    Both players got their stakes back
+                                </p>
+                            </div>
+                        ) : matchResult?.winner ? (
+                            <div>
+                                <p className="text-emerald-400 text-lg font-bold mb-2">
+                                    🎉 Match Completed!
+                                </p>
+                                <p className="text-slate-300 text-sm mb-4">
+                                    Winner: {matchResult.winner.slice(0, 6)}...
+                                    {matchResult.winner.slice(-4)}
+                                </p>
+                                <p className="text-emerald-300 text-sm">
+                                    Prize:{" "}
+                                    {matchResult.prize
+                                        ? `${(
+                                              parseFloat(matchResult.prize) /
+                                              1e18
+                                          ).toFixed(3)} ETH`
+                                        : "N/A"}
+                                </p>
+                            </div>
+                        ) : (
+                            <div>
+                                <p className="text-slate-400 mb-4">
+                                    This match has already been completed.
+                                </p>
+                                <p className="text-slate-300 text-sm">
+                                    Check the results in the game interface or
+                                    create a new match!
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-6">
+                        <button
+                            onClick={() => {
+                                setGameMode("setup");
+                                setMatchId(null);
+                                setStakeAmount("0.001");
+                            }}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 py-3 rounded-lg font-bold transition-colors"
+                        >
+                            Start New Match
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
