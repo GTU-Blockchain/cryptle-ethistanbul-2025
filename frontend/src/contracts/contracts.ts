@@ -3,15 +3,16 @@
 // Chain ID: 11155931 (RISE Testnet)
 
 // Import ABIs
-import ChatAppABI from './abi/ChatApp.json';
+import WordleABI from "./abi/SimpleWordle.json";
 
 export const contracts = {
-  ChatApp: {
-    address: '0xcf7b7f03188f3b248d6a3d4bd589dc7c31b55084' as const,
-    deploymentTxHash: '0xaa54b83133294bcdabb7ef2f12e2728494a2c4a005cf78948fa14ffbe2181033',
-    blockNumber: 15131606,
-    abi: ChatAppABI
-  }
+    SimpleWordle: {
+        address: "0xdec7539a3a95c343bd0c4c8559da424fa23956a4" as const,
+        deploymentTxHash:
+            "0x27ae3d1093d20f74665e231c3998cea71f29466580ef0717334a81ebe20da3fd",
+        blockNumber: 11155931,
+        abi: WordleABI,
+    },
 } as const;
 
 // Type exports
@@ -20,17 +21,18 @@ export type Contracts = typeof contracts;
 
 // Helper functions
 export function getContract<T extends ContractName>(name: T): Contracts[T] {
-  return contracts[name];
+    return contracts[name];
 }
 
 export function getContractAddress(name: ContractName): string {
-  return contracts[name].address;
+    return contracts[name].address;
 }
 
 export function getContractABI(name: ContractName) {
-  return contracts[name].abi;
+    return contracts[name].abi;
 }
 
 // Re-export specific contract for convenience
-export const CHATAPP_ADDRESS = '0xcf7b7f03188f3b248d6a3d4bd589dc7c31b55084' as const;
-export const CHATAPP_ABI = ChatAppABI;
+export const WORDLE_ADDRESS =
+    "0xdec7539a3a95c343bd0c4c8559da424fa23956a4" as const;
+export const WORDLE_ABI = WordleABI;
